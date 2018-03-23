@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"github.com/gabolaev/tpark_db/database"
 )
 
 func main() {
-	fmt.Println("For github")
+	database.Connect()
 }

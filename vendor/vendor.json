@@ -1,0 +1,79 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "lcZg+zxtHdtRgQCdjnjvY5CKRg0=",
+			"path": "github.com/fatih/color",
+			"revision": "507f6050b8568533fb3f5504de8e5205fa62a114",
+			"revisionTime": "2018-02-13T13:34:03Z"
+		},
+		{
+			"checksumSHA1": "Ar7F8Gvfyhjg25YPMEP4TvSr+eo=",
+			"path": "github.com/hokaccha/go-prettyjson",
+			"revision": "e6b9231a2b1cc5798b336fdbf99c16cd8ad1e0c9",
+			"revisionTime": "2017-02-13T12:08:34Z"
+		},
+		{
+			"checksumSHA1": "j3FclGZecXQ+RW69QATAz0/9x8Y=",
+			"path": "github.com/jackc/pgx",
+			"revision": "b6bdf5f89bb9484d8c66b5e89810943c1e9fbbbb",
+			"revisionTime": "2018-03-17T15:28:34Z"
+		},
+		{
+			"checksumSHA1": "sfq3M/iM4IL5qCw/39NEj4+Y4rg=",
+			"path": "github.com/jackc/pgx/chunkreader",
+			"revision": "b6bdf5f89bb9484d8c66b5e89810943c1e9fbbbb",
+			"revisionTime": "2018-03-17T15:28:34Z"
+		},
+		{
+			"checksumSHA1": "HwN5RgDjhgpK8t/pfpev1G3X2JE=",
+			"path": "github.com/jackc/pgx/internal/sanitize",
+			"revision": "b6bdf5f89bb9484d8c66b5e89810943c1e9fbbbb",
+			"revisionTime": "2018-03-17T15:28:34Z"
+		},
+		{
+			"checksumSHA1": "Skn3fE6C5eEcUg6QAmRUOlfTrJA=",
+			"path": "github.com/jackc/pgx/pgio",
+			"revision": "b6bdf5f89bb9484d8c66b5e89810943c1e9fbbbb",
+			"revisionTime": "2018-03-17T15:28:34Z"
+		},
+		{
+			"checksumSHA1": "HWgHuZd6KfvoMDW0E/sy1x6r00Y=",
+			"path": "github.com/jackc/pgx/pgproto3",
+			"revision": "b6bdf5f89bb9484d8c66b5e89810943c1e9fbbbb",
+			"revisionTime": "2018-03-17T15:28:34Z"
+		},
+		{
+			"checksumSHA1": "sYjdZgMPSK13EQNp4vCpO1iSM3c=",
+			"path": "github.com/jackc/pgx/pgtype",
+			"revision": "b6bdf5f89bb9484d8c66b5e89810943c1e9fbbbb",
+			"revisionTime": "2018-03-17T15:28:34Z"
+		},
+		{
+			"checksumSHA1": "AtXpiR7Gtq5cF+6eUAH+LzupMts=",
+			"path": "github.com/mattn/go-colorable",
+			"revision": "efa589957cd060542a26d2dd7832fd6a6c6c3ade",
+			"revisionTime": "2018-03-10T13:32:14Z"
+		},
+		{
+			"checksumSHA1": "kum8izZy1+pVfDiApW5hT2HoH1w=",
+			"path": "github.com/mattn/go-isatty",
+			"revision": "6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c",
+			"revisionTime": "2017-11-07T05:05:31Z"
+		},
+		{
+			"checksumSHA1": "d6BycwPpKXW09I/tXMqcItE8SA4=",
+			"path": "github.com/pkg/errors",
+			"revision": "816c9085562cd7ee03e7f8188a1cfd942858cded",
+			"revisionTime": "2018-03-11T21:45:15Z"
+		},
+		{
+			"checksumSHA1": "dRWRXOISZjU/zZ0kGTu0pXAFVgA=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "91ee8cde435411ca3f1cd365e8f20131aed4d0a1",
+			"revisionTime": "2018-03-22T14:10:41Z"
+		}
+	],
+	"rootPath": "github.com/gabolaev/tpark_db"
+}
