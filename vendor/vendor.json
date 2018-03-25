@@ -9,12 +9,6 @@
 			"revisionTime": "2018-02-13T13:34:03Z"
 		},
 		{
-			"checksumSHA1": "d+XRoq4/jdknXDeZnNNN369hZVY=",
-			"path": "github.com/gabolaev/tpark_db",
-			"revision": "d65a769220ea9bdb99cf5cfc2c1c03486111b4b7",
-			"revisionTime": "2018-03-24T00:40:51Z"
-		},
-		{
 			"checksumSHA1": "Ar7F8Gvfyhjg25YPMEP4TvSr+eo=",
 			"path": "github.com/hokaccha/go-prettyjson",
 			"revision": "e6b9231a2b1cc5798b336fdbf99c16cd8ad1e0c9",

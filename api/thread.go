@@ -1,5 +1,11 @@
 package api
 
+import (
+	"fmt"
+
+	"github.com/valyala/fasthttp"
+)
+
 //easyjson:json
 type Thread struct {
 	ID      int
@@ -20,3 +26,23 @@ type ThreadUpdate struct {
 
 //easyjson:json
 type Threads []Thread
+
+func GetThreadInfo(context *fasthttp.RequestCtx) {
+	fmt.Println(context)
+}
+
+func GetThreadPosts(context *fasthttp.RequestCtx) {
+	fmt.Println(context)
+}
+
+func UpdateThreadInfo(context *fasthttp.RequestCtx) {
+	fmt.Println(context)
+}
+
+func CreateThreadPosts(context *fasthttp.RequestCtx) {
+	fmt.Println(context)
+}
+
+func VoteThread(context *fasthttp.RequestCtx) {
+	fmt.Println(context)
+}

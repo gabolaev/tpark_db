@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/gabolaev/tpark_db/database"
+	"github.com/gabolaev/tpark_db/router"
+	"github.com/valyala/fasthttp"
 )
 
 func main() {
@@ -17,4 +19,8 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+
+	router := router.Instance.Handler
+	fasthttp.ListenAndServe(":8080", router)
+
 }

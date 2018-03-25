@@ -1,5 +1,11 @@
 package api
 
+import (
+	"fmt"
+
+	"github.com/valyala/fasthttp"
+)
+
 //easyjson:json
 type Post struct {
 	ID      int64
@@ -23,4 +29,12 @@ type PostFull struct {
 //easyjson:json
 type PostUpdate struct {
 	Message string
+}
+
+func GetPostFull(context *fasthttp.RequestCtx) {
+	fmt.Println(context)
+}
+
+func UpdatePost(context *fasthttp.RequestCtx) {
+	fmt.Println(context)
 }
