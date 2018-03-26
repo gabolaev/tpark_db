@@ -6,23 +6,23 @@ import (
 	"github.com/jackc/pgx"
 )
 
-// Connect is
-func Connect() (*pgx.ConnPool, error) {
-	connConfig, err := pgx.ParseEnvLibpq()
-	if err != nil {
-		return nil, err
-	}
+// Instance of database
+var Instance *pgx.ConnPool
 
-	db, err := pgx.NewConnPool(
-		pgx.ConnPoolConfig{
-			ConnConfig:     connConfig,
-			MaxConnections: 8,
-		})
-	if err != nil {
-		return nil, err
+// Connect method for Instance
+func Connect() error {
+	if connConfig, err := pgx.ParseEnvLibpq(); err != nil {
+		return nil
+	} else {
+		if Instance, err = pgx.NewConnPool(
+			pgx.ConnPoolConfig{
+				ConnConfig:     connConfig,
+				MaxConnections: 8,
+			}); err != nil {
+			return err
+		}
 	}
-
-	return db, nil
+	return nil
 }
 
 // LoadSchema is
@@ -33,8 +33,7 @@ func LoadSchema(db *pgx.ConnPool, path string) error {
 	}
 	schemaStr := string(schema)
 
-	_, err = db.Exec(schemaStr)
-	if err != nil {
+	if _, err := db.Exec(schemaStr); err != nil {
 		return err
 	}
 	return nil
