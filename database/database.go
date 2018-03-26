@@ -8,7 +8,7 @@ import (
 
 // Database structure
 type Database struct {
-	pool *pgx.ConnPool
+	Pool *pgx.ConnPool
 }
 
 // Instance of database
@@ -19,7 +19,7 @@ func (i Database) Connect() error {
 	if connConfig, err := pgx.ParseEnvLibpq(); err != nil {
 		return nil
 	} else {
-		if Instance.pool, err = pgx.NewConnPool(
+		if Instance.Pool, err = pgx.NewConnPool(
 			pgx.ConnPoolConfig{
 				ConnConfig:     connConfig,
 				MaxConnections: 8,
@@ -38,7 +38,7 @@ func (i Database) LoadSchema(path string) error {
 	}
 	schemaStr := string(schema)
 
-	if _, err := i.pool.Exec(schemaStr); err != nil {
+	if _, err := i.Pool.Exec(schemaStr); err != nil {
 		return err
 	}
 	return nil

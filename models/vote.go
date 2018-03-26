@@ -1,4 +1,4 @@
-package api
+package models
 
 //easyjson:json
 type Vote struct {
