@@ -26,6 +26,8 @@ func CreateUser(context *fasthttp.RequestCtx) {
 		return
 	}
 
+	// pgx.Row
+
 	if responseJSON, err := easyjson.Marshal(user); err != nil {
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
 		context.WriteString(err.Error())

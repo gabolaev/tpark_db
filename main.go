@@ -25,12 +25,12 @@ func main() {
 		return
 	}
 
-	if err := database.Connect(); err != nil {
+	if err := database.Instance.Connect(); err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	if err := database.LoadSchema(database.Instance, config.Database.SchemaFile); err != nil {
+	if err := database.Instance.LoadSchema(config.Database.SchemaFile); err != nil {
 		fmt.Println(err)
 		return
 	}

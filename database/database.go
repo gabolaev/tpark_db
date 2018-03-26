@@ -6,15 +6,20 @@ import (
 	"github.com/jackc/pgx"
 )
 
+// Database structure
+type Database struct {
+	pool *pgx.ConnPool
+}
+
 // Instance of database
-var Instance *pgx.ConnPool
+var Instance = Database{}
 
 // Connect method for Instance
-func Connect() error {
+func (i Database) Connect() error {
 	if connConfig, err := pgx.ParseEnvLibpq(); err != nil {
 		return nil
 	} else {
-		if Instance, err = pgx.NewConnPool(
+		if Instance.pool, err = pgx.NewConnPool(
 			pgx.ConnPoolConfig{
 				ConnConfig:     connConfig,
 				MaxConnections: 8,
@@ -26,14 +31,14 @@ func Connect() error {
 }
 
 // LoadSchema is
-func LoadSchema(db *pgx.ConnPool, path string) error {
+func (i Database) LoadSchema(path string) error {
 	schema, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
 	schemaStr := string(schema)
 
-	if _, err := db.Exec(schemaStr); err != nil {
+	if _, err := i.pool.Exec(schemaStr); err != nil {
 		return err
 	}
 	return nil
