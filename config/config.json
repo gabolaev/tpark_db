@@ -1,0 +1,5 @@
+{
+    "Database": {
+        "SchemaFile": "/Users/gabolaev/go/src/github.com/gabolaev/tpark_db/sql-schema/create.sql"
+    }
+}
