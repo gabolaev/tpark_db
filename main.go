@@ -2,25 +2,38 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 
+	"github.com/mailru/easyjson"
+
+	"github.com/gabolaev/tpark_db/config"
 	"github.com/gabolaev/tpark_db/database"
 	"github.com/gabolaev/tpark_db/router"
 	"github.com/valyala/fasthttp"
 )
 
 func main() {
-	db, err := database.Connect()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	err = database.LoadSchema(db, "/Users/gabolaev/go/src/github.com/gabolaev/tpark_db/sql-schema/create.sql")
+	var config config.Config
+	configBytes, err := ioutil.ReadFile("config/config.json")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	router := router.Instance.Handler
-	fasthttp.ListenAndServe(":8080", router)
+	if err := easyjson.Unmarshal(configBytes, &config); err != nil {
+		fmt.Println(err)
+		return
+	}
 
+	if err := database.Connect(); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if err := database.LoadSchema(database.Instance, config.Database.SchemaFile); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fasthttp.ListenAndServe(":8080", router.Instance.Handler)
 }
