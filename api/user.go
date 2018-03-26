@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 
+	"github.com/mailru/easyjson"
 	"github.com/valyala/fasthttp"
 )
 
@@ -18,7 +19,20 @@ type User struct {
 type Users []User
 
 func CreateUser(context *fasthttp.RequestCtx) {
-	fmt.Println(context)
+	var user User
+	if err := easyjson.Unmarshal(context.PostBody(), &user); err != nil {
+		context.SetStatusCode(fasthttp.StatusBadRequest)
+		context.WriteString(err.Error())
+		return
+	}
+
+	if responseJSON, err := easyjson.Marshal(user); err != nil {
+		context.SetStatusCode(fasthttp.StatusInternalServerError)
+		context.WriteString(err.Error())
+	} else {
+		context.SetStatusCode(fasthttp.StatusCreated)
+		context.SetBody(responseJSON)
+	}
 }
 
 func GetUser(context *fasthttp.RequestCtx) {
