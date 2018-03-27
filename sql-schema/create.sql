@@ -16,8 +16,8 @@ CREATE INDEX IF NOT EXISTS idx__users_nickname
 
 CREATE TABLE IF NOT EXISTS forums (
   slug    CITEXT UNIQUE NOT NULL,
-  posts   BIGINT,
-  threads INTEGER,
+  posts   BIGINT DEFAULT 0,
+  threads INTEGER DEFAULT 0,
   title   TEXT,
   creator CITEXT CONSTRAINT fk__forums_creator__users_nickname REFERENCES users (nickname)
 );

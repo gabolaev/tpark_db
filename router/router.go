@@ -13,7 +13,7 @@ func init() {
 	// Instance.GET("/forum/:slug/users", api.GetForumUsers)
 	// Instance.GET("/forum/:slug/details", api.GetForumInfo)
 	// Instance.GET("/forum/:slug/threads", api.GetForumThreads)
-	// Instance.POST("/forum/:slug/create", api.CreateForum)
+	Instance.POST("/forum/create", api.CreateForum)
 
 	// Instance.GET("/post/:id/details", api.GetPostFull)
 	// Instance.POST("/post/:id/details", api.UpdatePost)
