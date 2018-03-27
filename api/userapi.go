@@ -17,6 +17,7 @@ func CreateUser(context *fasthttp.RequestCtx) {
 		context.WriteString(err.Error())
 		return
 	}
+	user.Nickname = context.UserValue("nickname").(string)
 
 	result, created, err := helpers.CreateNewOrGetExistingUsers(&user)
 	if err != nil {
@@ -24,25 +25,68 @@ func CreateUser(context *fasthttp.RequestCtx) {
 		errorJSON, _ := easyjson.Marshal(models.Error{Message: err.Error()})
 		context.SetBody(errorJSON)
 	}
-	if created == false {
-		context.SetStatusCode(fasthttp.StatusConflict)
-		if existingUsersJSON, err := easyjson.Marshal(result); err != nil {
-			context.SetStatusCode(fasthttp.StatusInternalServerError)
+
+	if responseBody, err := easyjson.Marshal(result); err != nil {
+		context.SetStatusCode(fasthttp.StatusInternalServerError)
+	} else {
+		if created {
+			context.SetBody(responseBody[1 : len(responseBody)-1])
+			context.SetStatusCode(fasthttp.StatusCreated)
 		} else {
-			context.SetBody(existingUsersJSON)
-			return
+			context.SetBody(responseBody)
+			context.SetStatusCode(fasthttp.StatusConflict)
 		}
 	}
-
-	context.SetStatusCode(fasthttp.StatusCreated)
-	context.SetBody(body)
-
 }
 
 func GetUser(context *fasthttp.RequestCtx) {
-	fmt.Println(context)
+	nickname := context.UserValue("nickname").(string)
+	result, err := helpers.GetUserByNickname(nickname)
+	if err != nil {
+		context.SetStatusCode(fasthttp.StatusNotFound)
+		errorJSON, _ := easyjson.Marshal(models.Error{
+			Message: fmt.Sprintf("Can't find user with nickname: %s", nickname)})
+		context.SetBody(errorJSON)
+	} else {
+		if user, err := easyjson.Marshal(result); err != nil {
+			context.SetStatusCode(fasthttp.StatusInternalServerError)
+		} else {
+			context.SetStatusCode(fasthttp.StatusOK)
+			context.SetBody(user)
+		}
+	}
+
 }
 
 func UpdateUser(context *fasthttp.RequestCtx) {
-	fmt.Println(context)
+	nickname := context.UserValue("nickname").(string)
+	var user models.User
+	body := context.PostBody()
+	if err := easyjson.Unmarshal(body, &user); err != nil {
+		context.SetStatusCode(fasthttp.StatusBadRequest)
+		context.WriteString(err.Error())
+		return
+	}
+	user.Nickname = nickname
+	updated, err := helpers.UpdateUserInfo(&user)
+	if err != nil {
+		context.SetStatusCode(fasthttp.StatusConflict)
+		errorJSON, _ := easyjson.Marshal(models.Error{
+			Message: "New user profile data conflicts with existing users."})
+		context.SetBody(errorJSON)
+		return
+	}
+	if updated {
+		context.SetStatusCode(fasthttp.StatusOK)
+		if updatedUser, err := easyjson.Marshal(user); err != nil {
+			context.SetStatusCode(fasthttp.StatusInternalServerError)
+		} else {
+			context.SetBody(updatedUser)
+		}
+	} else {
+		context.SetStatusCode(fasthttp.StatusNotFound)
+		errorJSON, _ := easyjson.Marshal(models.Error{
+			Message: "User not found"})
+		context.SetBody(errorJSON)
+	}
 }
