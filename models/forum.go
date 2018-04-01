@@ -6,5 +6,5 @@ type Forum struct {
 	Posts   int64
 	Threads int
 	Title   string
-	Creator string
+	User    string
 }

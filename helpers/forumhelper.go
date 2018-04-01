@@ -12,29 +12,37 @@ func CreateNewOrGetExistingForum(forum *models.Forum) (*models.Forum, bool, erro
 	}
 	defer tx.Rollback()
 
-	_, err = database.Instance.Pool.Exec(
+	err = tx.QueryRow(
 		`
 		INSERT
-		INTO forums (slug, title, creator) 
-		VALUES ($1, $2, $3)
+		INTO forums (slug, title, "user") 
+		VALUES ($1, $2, (SELECT nickname
+						 FROM users 
+						 WHERE nickname = $3
+						 )
+				)
+		RETURNING "user"
 		`,
-		forum.Slug, forum.Title, forum.Creator)
+		forum.Slug, forum.Title, forum.User).
+		Scan(&forum.User)
 
 	if err != nil {
 		sError := err.Error()
 		// dirty hack with error code
 		if sError[len(sError)-2] == '5' {
-			err := database.Instance.Pool.QueryRow(
+			var result string
+			err = database.Instance.Pool.QueryRow(
 				`
-				SELECT posts, threads, title, creator
+				SELECT slug, posts, threads, title, "user"
 				FROM forums 
 				WHERE slug = $1
 				`,
 				forum.Slug).Scan(
+				&forum.Slug,
 				&forum.Posts,
 				&forum.Threads,
 				&forum.Title,
-				&forum.Creator)
+				&result)
 			if err != nil {
 				return nil, false, err
 			}
@@ -45,7 +53,28 @@ func CreateNewOrGetExistingForum(forum *models.Forum) (*models.Forum, bool, erro
 	forum.Posts = 0
 	forum.Threads = 0
 	if err := tx.Commit(); err != nil {
+		tx.Rollback()
 		return nil, false, err
 	}
 	return forum, true, nil // 201 created
+}
+
+func GetForumInfoBySlug(slug *string) (*models.Forum, error) {
+	findedForum := models.Forum{}
+	err := database.Instance.Pool.QueryRow(
+		`
+		SELECT posts, slug, threads, title, "user" 
+		FROM forums
+		WHERE slug = $1
+		`,
+		slug).Scan(
+		&findedForum.Posts,
+		&findedForum.Slug,
+		&findedForum.Threads,
+		&findedForum.Title,
+		&findedForum.User)
+	if err != nil {
+		return nil, err
+	}
+	return &findedForum, nil
 }

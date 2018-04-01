@@ -28,21 +28,21 @@ type ThreadUpdate struct {
 type Threads []Thread
 
 func GetThreadInfo(context *fasthttp.RequestCtx) {
-	fmt.Println(context)
+	fmt.Println(context) // debug
 }
 
 func GetThreadPosts(context *fasthttp.RequestCtx) {
-	fmt.Println(context)
+	fmt.Println(context) // debug
 }
 
 func UpdateThreadInfo(context *fasthttp.RequestCtx) {
-	fmt.Println(context)
+	fmt.Println(context) // debug
 }
 
 func CreateThreadPosts(context *fasthttp.RequestCtx) {
-	fmt.Println(context)
+	fmt.Println(context) // debug
 }
 
 func VoteThread(context *fasthttp.RequestCtx) {
-	fmt.Println(context)
+	fmt.Println(context) // debug
 }

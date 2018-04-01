@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS forums (
   posts   BIGINT DEFAULT 0,
   threads INTEGER DEFAULT 0,
   title   TEXT,
-  creator CITEXT CONSTRAINT fk__forums_creator__users_nickname REFERENCES users (nickname)
+  "user" CITEXT CONSTRAINT fk__forums_creator__users_nickname REFERENCES users (nickname)
 );
 
 CREATE INDEX IF NOT EXISTS idx__forums_slug
@@ -27,9 +27,9 @@ CREATE INDEX IF NOT EXISTS idx__forums_slug
 
 CREATE TABLE IF NOT EXISTS threads (
   id      SERIAL4 UNIQUE CONSTRAINT pk__threads_id PRIMARY KEY,
-  slug    CITEXT,
+  slug    CITEXT UNIQUE,
   author  CITEXT NOT NULL CONSTRAINT fk__threads_author__users_nickname REFERENCES users (nickname),
-  created TIMESTAMP(3) DEFAULT now(),
+  created TIMESTAMPTZ(3) DEFAULT now(),
   forum   CITEXT NOT NULL CONSTRAINT fk__threads_forum__forums_slug REFERENCES forums (slug),
   message TEXT   NOT NULL,
   title   TEXT   NOT NULL,
@@ -44,7 +44,7 @@ CREATE INDEX IF NOT EXISTS idx__threads_id
 CREATE TABLE IF NOT EXISTS posts (
   id      SERIAL8 UNIQUE CONSTRAINT pk__posts_id PRIMARY KEY,
   author  CITEXT NOT NULL CONSTRAINT fk__posts_author__users_nickname REFERENCES users (nickname),
-  created TIMESTAMP(3) DEFAULT now(),
+  created TIMESTAMPTZ(3) DEFAULT now(),
   forum   CITEXT CONSTRAINT fk__posts_forum__forums_slug REFERENCES forums (slug),
   edited  BOOLEAN      DEFAULT FALSE,
   message TEXT   NOT NULL,

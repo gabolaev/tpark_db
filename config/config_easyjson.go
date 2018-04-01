@@ -38,6 +38,8 @@ func easyjson6615c02eDecodeGithubComGabolaevTparkDbConfig(in *jlexer.Lexer, out 
 		switch key {
 		case "SchemaFile":
 			out.SchemaFile = string(in.String())
+		case "Timestamp":
+			out.Timestamp = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -61,6 +63,16 @@ func easyjson6615c02eEncodeGithubComGabolaevTparkDbConfig(out *jwriter.Writer, i
 			out.RawString(prefix)
 		}
 		out.String(string(in.SchemaFile))
+	}
+	{
+		const prefix string = ",\"Timestamp\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Timestamp))
 	}
 	out.RawByte('}')
 }

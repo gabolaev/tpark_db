@@ -36,9 +36,9 @@ func easyjsonD2b7633eDecodeGithubComGabolaevTparkDbModels(in *jlexer.Lexer, out 
 			continue
 		}
 		switch key {
-		case "Nickname":
+		case "nickname":
 			out.Nickname = string(in.String())
-		case "Voice":
+		case "voice":
 			out.Voice = int16(in.Int16())
 		default:
 			in.SkipRecursive()
@@ -55,7 +55,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels(out *jwriter.Writer, i
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"Nickname\":"
+		const prefix string = ",\"nickname\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -65,7 +65,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels(out *jwriter.Writer, i
 		out.String(string(in.Nickname))
 	}
 	{
-		const prefix string = ",\"Voice\":"
+		const prefix string = ",\"voice\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -197,13 +197,13 @@ func easyjsonD2b7633eDecodeGithubComGabolaevTparkDbModels2(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
-		case "Nickname":
+		case "nickname":
 			out.Nickname = string(in.String())
-		case "Email":
+		case "email":
 			out.Email = string(in.String())
-		case "Fullname":
+		case "fullname":
 			out.Fullname = string(in.String())
-		case "About":
+		case "about":
 			out.About = string(in.String())
 		default:
 			in.SkipRecursive()
@@ -220,7 +220,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels2(out *jwriter.Writer, 
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"Nickname\":"
+		const prefix string = ",\"nickname\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -230,7 +230,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels2(out *jwriter.Writer, 
 		out.String(string(in.Nickname))
 	}
 	{
-		const prefix string = ",\"Email\":"
+		const prefix string = ",\"email\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -240,7 +240,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels2(out *jwriter.Writer, 
 		out.String(string(in.Email))
 	}
 	{
-		const prefix string = ",\"Fullname\":"
+		const prefix string = ",\"fullname\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -250,7 +250,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels2(out *jwriter.Writer, 
 		out.String(string(in.Fullname))
 	}
 	{
-		const prefix string = ",\"About\":"
+		const prefix string = ",\"about\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -370,9 +370,9 @@ func easyjsonD2b7633eDecodeGithubComGabolaevTparkDbModels4(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
-		case "Message":
+		case "message":
 			out.Message = string(in.String())
-		case "Title":
+		case "title":
 			out.Title = string(in.String())
 		default:
 			in.SkipRecursive()
@@ -389,7 +389,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels4(out *jwriter.Writer, 
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"Message\":"
+		const prefix string = ",\"message\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -399,7 +399,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels4(out *jwriter.Writer, 
 		out.String(string(in.Message))
 	}
 	{
-		const prefix string = ",\"Title\":"
+		const prefix string = ",\"title\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -453,21 +453,21 @@ func easyjsonD2b7633eDecodeGithubComGabolaevTparkDbModels5(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
-		case "ID":
+		case "id":
 			out.ID = int(in.Int())
-		case "Slug":
+		case "slug":
 			out.Slug = string(in.String())
-		case "Author":
+		case "author":
 			out.Author = string(in.String())
-		case "Created":
+		case "created":
 			out.Created = string(in.String())
-		case "Forum":
+		case "forum":
 			out.Forum = string(in.String())
-		case "Message":
+		case "message":
 			out.Message = string(in.String())
-		case "Title":
+		case "title":
 			out.Title = string(in.String())
-		case "Votes":
+		case "votes":
 			out.Votes = int(in.Int())
 		default:
 			in.SkipRecursive()
@@ -484,7 +484,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels5(out *jwriter.Writer, 
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"ID\":"
+		const prefix string = ",\"id\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -494,7 +494,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels5(out *jwriter.Writer, 
 		out.Int(int(in.ID))
 	}
 	{
-		const prefix string = ",\"Slug\":"
+		const prefix string = ",\"slug\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -504,7 +504,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels5(out *jwriter.Writer, 
 		out.String(string(in.Slug))
 	}
 	{
-		const prefix string = ",\"Author\":"
+		const prefix string = ",\"author\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -514,7 +514,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels5(out *jwriter.Writer, 
 		out.String(string(in.Author))
 	}
 	{
-		const prefix string = ",\"Created\":"
+		const prefix string = ",\"created\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -524,7 +524,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels5(out *jwriter.Writer, 
 		out.String(string(in.Created))
 	}
 	{
-		const prefix string = ",\"Forum\":"
+		const prefix string = ",\"forum\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -534,7 +534,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels5(out *jwriter.Writer, 
 		out.String(string(in.Forum))
 	}
 	{
-		const prefix string = ",\"Message\":"
+		const prefix string = ",\"message\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -544,7 +544,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels5(out *jwriter.Writer, 
 		out.String(string(in.Message))
 	}
 	{
-		const prefix string = ",\"Title\":"
+		const prefix string = ",\"title\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -554,7 +554,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels5(out *jwriter.Writer, 
 		out.String(string(in.Title))
 	}
 	{
-		const prefix string = ",\"Votes\":"
+		const prefix string = ",\"votes\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -608,7 +608,7 @@ func easyjsonD2b7633eDecodeGithubComGabolaevTparkDbModels6(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
-		case "Message":
+		case "message":
 			out.Message = string(in.String())
 		default:
 			in.SkipRecursive()
@@ -625,7 +625,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels6(out *jwriter.Writer, 
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"Message\":"
+		const prefix string = ",\"message\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -679,7 +679,7 @@ func easyjsonD2b7633eDecodeGithubComGabolaevTparkDbModels7(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
-		case "Author":
+		case "author":
 			if in.IsNull() {
 				in.Skip()
 				out.Author = nil
@@ -689,7 +689,7 @@ func easyjsonD2b7633eDecodeGithubComGabolaevTparkDbModels7(in *jlexer.Lexer, out
 				}
 				(*out.Author).UnmarshalEasyJSON(in)
 			}
-		case "Forum":
+		case "forum":
 			if in.IsNull() {
 				in.Skip()
 				out.Forum = nil
@@ -699,7 +699,7 @@ func easyjsonD2b7633eDecodeGithubComGabolaevTparkDbModels7(in *jlexer.Lexer, out
 				}
 				(*out.Forum).UnmarshalEasyJSON(in)
 			}
-		case "Post":
+		case "post":
 			if in.IsNull() {
 				in.Skip()
 				out.Post = nil
@@ -709,7 +709,7 @@ func easyjsonD2b7633eDecodeGithubComGabolaevTparkDbModels7(in *jlexer.Lexer, out
 				}
 				(*out.Post).UnmarshalEasyJSON(in)
 			}
-		case "Thread":
+		case "thread":
 			if in.IsNull() {
 				in.Skip()
 				out.Thread = nil
@@ -734,7 +734,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels7(out *jwriter.Writer, 
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"Author\":"
+		const prefix string = ",\"author\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -748,7 +748,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels7(out *jwriter.Writer, 
 		}
 	}
 	{
-		const prefix string = ",\"Forum\":"
+		const prefix string = ",\"forum\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -762,7 +762,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels7(out *jwriter.Writer, 
 		}
 	}
 	{
-		const prefix string = ",\"Post\":"
+		const prefix string = ",\"post\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -776,7 +776,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels7(out *jwriter.Writer, 
 		}
 	}
 	{
-		const prefix string = ",\"Thread\":"
+		const prefix string = ",\"thread\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -834,21 +834,21 @@ func easyjsonD2b7633eDecodeGithubComGabolaevTparkDbModels8(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
-		case "ID":
+		case "id":
 			out.ID = int64(in.Int64())
-		case "Author":
+		case "author":
 			out.Author = string(in.String())
-		case "Created":
+		case "created":
 			out.Created = string(in.String())
-		case "Forum":
+		case "forum":
 			out.Forum = string(in.String())
-		case "Edited":
+		case "edited":
 			out.Edited = bool(in.Bool())
-		case "Message":
+		case "message":
 			out.Message = string(in.String())
-		case "Parent":
+		case "parent":
 			out.Parent = int64(in.Int64())
-		case "Thread":
+		case "thread":
 			out.Thread = int(in.Int())
 		default:
 			in.SkipRecursive()
@@ -865,7 +865,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels8(out *jwriter.Writer, 
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"ID\":"
+		const prefix string = ",\"id\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -875,7 +875,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels8(out *jwriter.Writer, 
 		out.Int64(int64(in.ID))
 	}
 	{
-		const prefix string = ",\"Author\":"
+		const prefix string = ",\"author\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -885,7 +885,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels8(out *jwriter.Writer, 
 		out.String(string(in.Author))
 	}
 	{
-		const prefix string = ",\"Created\":"
+		const prefix string = ",\"created\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -895,7 +895,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels8(out *jwriter.Writer, 
 		out.String(string(in.Created))
 	}
 	{
-		const prefix string = ",\"Forum\":"
+		const prefix string = ",\"forum\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -905,7 +905,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels8(out *jwriter.Writer, 
 		out.String(string(in.Forum))
 	}
 	{
-		const prefix string = ",\"Edited\":"
+		const prefix string = ",\"edited\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -915,7 +915,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels8(out *jwriter.Writer, 
 		out.Bool(bool(in.Edited))
 	}
 	{
-		const prefix string = ",\"Message\":"
+		const prefix string = ",\"message\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -925,7 +925,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels8(out *jwriter.Writer, 
 		out.String(string(in.Message))
 	}
 	{
-		const prefix string = ",\"Parent\":"
+		const prefix string = ",\"parent\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -935,7 +935,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels8(out *jwriter.Writer, 
 		out.Int64(int64(in.Parent))
 	}
 	{
-		const prefix string = ",\"Thread\":"
+		const prefix string = ",\"thread\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -989,16 +989,16 @@ func easyjsonD2b7633eDecodeGithubComGabolaevTparkDbModels9(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
-		case "Slug":
+		case "slug":
 			out.Slug = string(in.String())
-		case "Posts":
+		case "posts":
 			out.Posts = int64(in.Int64())
-		case "Threads":
+		case "threads":
 			out.Threads = int(in.Int())
-		case "Title":
+		case "title":
 			out.Title = string(in.String())
-		case "Creator":
-			out.Creator = string(in.String())
+		case "user":
+			out.User = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -1014,7 +1014,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels9(out *jwriter.Writer, 
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"Slug\":"
+		const prefix string = ",\"slug\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -1024,7 +1024,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels9(out *jwriter.Writer, 
 		out.String(string(in.Slug))
 	}
 	{
-		const prefix string = ",\"Posts\":"
+		const prefix string = ",\"posts\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -1034,7 +1034,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels9(out *jwriter.Writer, 
 		out.Int64(int64(in.Posts))
 	}
 	{
-		const prefix string = ",\"Threads\":"
+		const prefix string = ",\"threads\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -1044,7 +1044,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels9(out *jwriter.Writer, 
 		out.Int(int(in.Threads))
 	}
 	{
-		const prefix string = ",\"Title\":"
+		const prefix string = ",\"title\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -1054,14 +1054,14 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels9(out *jwriter.Writer, 
 		out.String(string(in.Title))
 	}
 	{
-		const prefix string = ",\"Creator\":"
+		const prefix string = ",\"user\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.Creator))
+		out.String(string(in.User))
 	}
 	out.RawByte('}')
 }
@@ -1108,7 +1108,7 @@ func easyjsonD2b7633eDecodeGithubComGabolaevTparkDbModels10(in *jlexer.Lexer, ou
 			continue
 		}
 		switch key {
-		case "Message":
+		case "message":
 			out.Message = string(in.String())
 		default:
 			in.SkipRecursive()
@@ -1125,7 +1125,7 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels10(out *jwriter.Writer,
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"Message\":"
+		const prefix string = ",\"message\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])

@@ -1,5 +1,6 @@
 {
     "Database": {
-        "SchemaFile": "/Users/gabolaev/go/src/github.com/gabolaev/tpark_db/sql-schema/create.sql"
+        "SchemaFile": "/Users/gabolaev/go/src/github.com/gabolaev/tpark_db/sql-schema/create.sql",
+        "Timestamp": "1998-04-27T00:00:00.000Z"
     }
 }

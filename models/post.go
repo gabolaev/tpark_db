@@ -32,9 +32,9 @@ type PostUpdate struct {
 }
 
 func GetPostFull(context *fasthttp.RequestCtx) {
-	fmt.Println(context)
+	fmt.Println(context) // debug
 }
 
 func UpdatePost(context *fasthttp.RequestCtx) {
-	fmt.Println(context)
+	fmt.Println(context) // debug
 }

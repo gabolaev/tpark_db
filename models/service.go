@@ -7,9 +7,9 @@ import (
 )
 
 func ClearDB(context *fasthttp.RequestCtx) {
-	fmt.Println(context)
+	fmt.Println(context) // debug
 }
 
 func GetDBInfo(context *fasthttp.RequestCtx) {
-	fmt.Println(context)
+	fmt.Println(context) // debug
 }

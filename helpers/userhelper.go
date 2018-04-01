@@ -10,10 +10,10 @@ func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, bool, error)
 	if err != nil {
 		return nil, false, err
 	}
-	defer tx.Rollback()
+	defer tx.Commit()
 
 	users := models.Users{}
-	execResult, err := database.Instance.Pool.Exec(
+	execResult, err := tx.Exec(
 		`
 		INSERT
 		INTO users (nickname, fullname, email, about) 
@@ -31,7 +31,7 @@ func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, bool, error)
 		return &users, true, nil
 	}
 
-	rows, err := database.Instance.Pool.Query(
+	rows, err := tx.Query(
 		`
 		SELECT nickname, fullname, email, about
 		FROM users 
@@ -53,7 +53,8 @@ func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, bool, error)
 		}
 	}
 	if err := tx.Commit(); err != nil {
-		return nil, false, err
+		tx.Rollback()
+		return nil, false, nil
 	}
 	return &users, false, nil
 }
@@ -77,20 +78,35 @@ func GetUserByNickname(nickname string) (*models.User, error) {
 	return &findedUser, nil
 }
 
-func UpdateUserInfo(user *models.User) (bool, error) {
+func UpdateUserInfo(user *models.User) error {
 	tx, err := database.Instance.Pool.Begin()
 	if err != nil {
-		return false, err
+		return err
 	}
 	defer tx.Commit()
 
-	execResult, err := database.Instance.Pool.Exec(
+	err = tx.QueryRow(
 		`
 		UPDATE users
-		SET fullname = $1, email = $2, about = $3
-		WHERE nickname = $4
+		SET
+			fullname = coalesce(coalesce(nullif($1, ''), fullname)), 
+			email = coalesce(coalesce(nullif($2, ''), email)), 
+			about = coalesce(coalesce(nullif($3, ''), about))
+		WHERE
+			nickname = $4
+		RETURNING
+			fullname,
+			email,
+			about
 		`,
-		user.Fullname, user.Email, user.About, user.Nickname)
-
-	return execResult.RowsAffected() != 0, err
+		user.Fullname, user.Email, user.About, user.Nickname).
+		Scan(&user.Fullname, &user.Email, &user.About)
+	if err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
+		return err
+	}
+	return err
 }

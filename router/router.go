@@ -10,12 +10,10 @@ var Instance = fasthttprouter.New()
 
 func init() {
 
-	// Instance.GET("/forum/:slug/users", api.GetForumUsers)
-	// Instance.GET("/forum/:slug/details", api.GetForumInfo)
+	Instance.POST("/forum/*catch-all-param", api.CreateThreadOrForum)
+	Instance.GET("/forum/:slug/users", api.GetForumUsers)
+	Instance.GET("/forum/:slug/details", api.GetForumInfo)
 	// Instance.GET("/forum/:slug/threads", api.GetForumThreads)
-	Instance.POST("/forum/create", api.CreateForum)
-
-	// Instance.GET("/post/:id/details", api.GetPostFull)
 	// Instance.POST("/post/:id/details", api.UpdatePost)
 
 	// Instance.GET("/service/status", api.GetDBInfo)
