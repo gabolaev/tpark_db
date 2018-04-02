@@ -5,31 +5,32 @@ import (
 	"time"
 
 	"github.com/gabolaev/tpark_db/database"
+	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/models"
 )
 
-func CreatePostsByThreadSlugOrID(posts *models.Posts, slugOrID *string) (*models.Posts, int, error) {
+func CreatePostsByThreadSlugOrID(posts *models.Posts, slugOrID *string) (*models.Posts, error) {
 	var threadID int
 	var err error
 	if IsNumber(slugOrID) {
 		if threadID, err = strconv.Atoi(*slugOrID); err != nil {
-			return nil, 500, err
+			return nil, err
 		}
 	} else {
 		if threadID, err = GetThreadIDBySlug(slugOrID); err != nil {
-			return nil, 500, err
+			return nil, err
 		}
 	}
 
 	tx, err := database.Instance.Pool.Begin()
 	if err != nil {
-		return nil, 500, err
+		return nil, err
 	}
 	defer tx.Rollback()
 
 	forumSlug, err := GetForumSlugByThreadID(&threadID)
 	if err != nil {
-		return nil, 404, err // thread not exists
+		return nil, errors.NotFoundError
 	}
 	currentTime := time.Now()
 	currentTimeString := currentTime.Format("2006-01-02T15:04:05.000Z")
@@ -38,10 +39,10 @@ func CreatePostsByThreadSlugOrID(posts *models.Posts, slugOrID *string) (*models
 		if post.Parent != 0 {
 			err = tx.QueryRow("SELECT COUNT(*) FROM posts WHERE id = $1", post.Parent).Scan(&parentExists)
 			if err != nil {
-				return nil, 500, err
+				return nil, err
 			}
 			if parentExists != 1 {
-				return nil, 409, nil
+				return nil, errors.ConflictError
 			}
 		}
 		err = tx.QueryRow(
@@ -53,13 +54,16 @@ func CreatePostsByThreadSlugOrID(posts *models.Posts, slugOrID *string) (*models
 		`, post.Author, forumSlug, currentTime, post.Message, post.Parent, threadID).
 			Scan(&post.ID)
 		if err != nil {
-			return nil, 500, err // parent posts error
+			return nil, errors.ConflictError
 		}
 		post.Created = currentTimeString
 		post.Edited = false
 		post.Forum = forumSlug
 		post.Thread = threadID
 	}
-	tx.Commit()
-	return posts, 201, nil // done
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	return posts, nil
 }

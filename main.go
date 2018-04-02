@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/mailru/easyjson"
-
 	"github.com/gabolaev/tpark_db/config"
 	"github.com/gabolaev/tpark_db/database"
 	"github.com/gabolaev/tpark_db/router"
@@ -20,7 +18,7 @@ func main() {
 		return
 	}
 
-	if err := easyjson.Unmarshal(configBytes, &config); err != nil {
+	if err := config.UnmarshalJSON(configBytes); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -29,6 +27,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	defer database.Instance.Disconnect()
 
 	if err := database.Instance.LoadSchema(config.Database.SchemaFile); err != nil {
 		fmt.Println(err)

@@ -2,33 +2,38 @@ package helpers
 
 import (
 	"github.com/gabolaev/tpark_db/database"
+	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/models"
 )
 
-func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, bool, error) {
+func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, error) {
 	tx, err := database.Instance.Pool.Begin()
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
-	defer tx.Commit()
+	defer tx.Rollback()
 
 	users := models.Users{}
 	execResult, err := tx.Exec(
 		`
 		INSERT
 		INTO users (nickname, fullname, email, about) 
-		VALUES ($1, $2, $3, $4) 
+		VALUES ($1, $2, $3, $4)
 		ON CONFLICT DO NOTHING
 		`,
 		user.Nickname, user.Fullname, user.Email, user.About)
 
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 
 	if execResult.RowsAffected() != 0 {
 		users = append(users, user)
-		return &users, true, nil
+		if err := tx.Commit(); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		return &users, nil
 	}
 
 	rows, err := tx.Query(
@@ -39,7 +44,9 @@ func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, bool, error)
 		`,
 		user.Nickname, user.Email)
 	defer rows.Close()
-
+	if err != nil {
+		return nil, err
+	}
 	for rows.Next() {
 		existingUser := &models.User{}
 		if err := rows.Scan(
@@ -47,21 +54,26 @@ func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, bool, error)
 			&existingUser.Fullname,
 			&existingUser.Email,
 			&existingUser.About); err != nil {
-			return nil, false, err
-		} else {
-			users = append(users, existingUser)
+			return nil, err
 		}
+		users = append(users, existingUser)
 	}
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
-		return nil, false, nil
+		return nil, err
 	}
-	return &users, false, nil
+	return &users, errors.ConflictError
 }
 
 func GetUserByNickname(nickname string) (*models.User, error) {
+	tx, err := database.Instance.Pool.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
 	findedUser := models.User{}
-	err := database.Instance.Pool.QueryRow(
+	err = tx.QueryRow(
 		`
 		SELECT nickname, fullname, email, about 
 		FROM users 
@@ -73,6 +85,10 @@ func GetUserByNickname(nickname string) (*models.User, error) {
 		&findedUser.Email,
 		&findedUser.About)
 	if err != nil {
+		return nil, errors.NotFoundError
+	}
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 	return &findedUser, nil
@@ -83,7 +99,7 @@ func UpdateUserInfo(user *models.User) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Commit()
+	defer tx.Rollback()
 
 	err = tx.QueryRow(
 		`
@@ -102,11 +118,15 @@ func UpdateUserInfo(user *models.User) error {
 		user.Fullname, user.Email, user.About, user.Nickname).
 		Scan(&user.Fullname, &user.Email, &user.About)
 	if err != nil {
-		return err
+		sError := err.Error()
+		if sError[len(sError)-2] == '5' {
+			return errors.ConflictError
+		}
+		return errors.NotFoundError
 	}
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
 		return err
 	}
-	return err
+	return nil
 }

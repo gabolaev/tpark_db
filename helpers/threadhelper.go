@@ -1,10 +1,10 @@
 package helpers
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gabolaev/tpark_db/database"
+	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/models"
 )
 
@@ -15,7 +15,9 @@ func checkThreadSlugExisting(slug *string) (count int, err error) {
 	}
 	defer tx.Rollback()
 	_ = tx.QueryRow("SELECT COUNT(*) FROM threads WHERE slug = $1", slug).Scan(&count)
-	tx.Commit()
+	if err = tx.Commit(); err != nil {
+		return
+	}
 	return
 }
 
@@ -48,6 +50,9 @@ func GetThreadBySlug(slug *string) (*models.Thread, error) {
 		return nil, err
 	}
 	thread.Created = createdInTime.Format("2006-01-02T15:04:05.000Z")
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
 	return &thread, nil
 }
 
@@ -59,8 +64,9 @@ func GetForumSlugByThreadID(tID *int) (slug string, err error) {
 	defer tx.Rollback()
 
 	err = tx.QueryRow("SELECT forum FROM threads WHERE id = $1", *tID).Scan(&slug)
-	fmt.Println(err)
-	tx.Commit()
+	if err = tx.Commit(); err != nil {
+		return
+	}
 	return
 }
 
@@ -72,28 +78,33 @@ func GetThreadIDBySlug(slug *string) (result int, err error) {
 	defer tx.Rollback()
 
 	err = tx.QueryRow("SELECT id FROM threads WHERE slug = $1", slug).Scan(&result)
-	tx.Commit()
+	if err = tx.Commit(); err != nil {
+		return
+	}
 	return
 }
 
-func CreateNewOrGetExistingThread(thread *models.Thread) (*models.Thread, int16, error) {
+func CreateNewOrGetExistingThread(thread *models.Thread) (*models.Thread, error) {
 	tx, err := database.Instance.Pool.Begin()
 	if err != nil {
-		return nil, 500, err
+		return nil, err
 	}
-	defer tx.Commit()
+	defer tx.Rollback()
 
 	if thread.Slug != "" {
 		slugCounts, err := checkThreadSlugExisting(&thread.Slug)
 		if err != nil {
-			return nil, 500, err
+			return nil, err
 		}
 		if slugCounts > 0 {
 			existThread, err := GetThreadBySlug(&thread.Slug)
 			if err != nil {
-				return nil, 500, err
+				return nil, err
 			}
-			return existThread, 409, nil
+			if err := tx.Commit(); err != nil {
+				return nil, err
+			}
+			return existThread, errors.ConflictError
 		}
 	}
 
@@ -103,7 +114,7 @@ func CreateNewOrGetExistingThread(thread *models.Thread) (*models.Thread, int16,
 	} else {
 		createdInTime, err = time.Parse("2006-01-02T15:04:05.000Z07:00", thread.Created)
 		if err != nil {
-			return nil, 500, err
+			return nil, err
 		}
 	}
 
@@ -126,14 +137,17 @@ func CreateNewOrGetExistingThread(thread *models.Thread) (*models.Thread, int16,
 		if sError[len(sError)-2] == '5' {
 			thread, err := GetThreadBySlug(&thread.Slug)
 			if err != nil {
-				return nil, 501, err
+				return nil, err
 			}
-			return thread, 409, nil
+			if err := tx.Commit(); err != nil {
+				return nil, err
+			}
+			return thread, errors.ConflictError
 		}
-		return nil, 404, nil
+		return nil, errors.NotFoundError
 	}
 	if err := tx.Commit(); err != nil {
-		return nil, 500, err
+		return nil, err
 	}
-	return thread, 201, nil // 201 created
+	return thread, nil
 }

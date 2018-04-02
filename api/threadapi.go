@@ -1,10 +1,10 @@
 package api
 
 import (
+	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/helpers"
 
 	"github.com/gabolaev/tpark_db/models"
-	"github.com/mailru/easyjson"
 
 	"github.com/valyala/fasthttp"
 )
@@ -18,38 +18,36 @@ func CreateThreadOrForum(context *fasthttp.RequestCtx) {
 	}
 	var thread models.Thread
 	body := context.PostBody()
-	if err := easyjson.Unmarshal(body, &thread); err != nil {
+	if err := thread.UnmarshalJSON(body); err != nil {
 		context.SetStatusCode(fasthttp.StatusBadRequest)
 		context.WriteString(err.Error())
 		return
 	}
 
 	thread.Forum = param[1 : len(param)-7]
-	result, code, err := helpers.CreateNewOrGetExistingThread(&thread)
-	switch code {
-	case 201:
-		if createdForumJSON, err := easyjson.Marshal(result); err != nil {
-			context.SetStatusCode(fasthttp.StatusInternalServerError)
-			context.SetBodyString(err.Error())
-		} else {
-			context.SetStatusCode(fasthttp.StatusCreated)
-			context.SetBody(createdForumJSON)
-		}
-	case 409:
-		if existingForumJSON, err := easyjson.Marshal(result); err != nil {
-			context.SetStatusCode(fasthttp.StatusInternalServerError)
-			context.SetBodyString(err.Error())
-		} else {
-			context.SetStatusCode(fasthttp.StatusConflict)
-			context.SetBody(existingForumJSON)
-		}
-	case 404:
-		errorJSON, _ := easyjson.Marshal(models.Error{
-			Message: "Can't find user or forum"})
+	result, err := helpers.CreateNewOrGetExistingThread(&thread)
+	var responseStatus int
+	switch err {
+	case nil:
+		responseStatus = fasthttp.StatusCreated
+	case errors.ConflictError:
+		responseStatus = fasthttp.StatusConflict
+	case errors.NotFoundError:
+		err := models.Error{Message: "Can't find user or forum"}
+		errorJSON, _ := err.MarshalJSON()
 		context.SetStatusCode(fasthttp.StatusNotFound)
 		context.SetBody(errorJSON)
+		return
 	default:
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
 		context.SetBodyString(err.Error())
+		return
+	}
+	if existingForumJSON, err := result.MarshalJSON(); err != nil {
+		context.SetStatusCode(fasthttp.StatusInternalServerError)
+		context.SetBodyString(err.Error())
+	} else {
+		context.SetStatusCode(responseStatus)
+		context.SetBody(existingForumJSON)
 	}
 }

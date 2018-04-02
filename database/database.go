@@ -30,15 +30,28 @@ func (i Database) Connect() error {
 	return nil
 }
 
+func (i Database) Disconnect() {
+	i.Pool.Close()
+}
+
 // LoadSchema is
 func (i Database) LoadSchema(path string) error {
+	tx, err := i.Pool.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
 	schema, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
 	schemaStr := string(schema)
 
-	if _, err := i.Pool.Exec(schemaStr); err != nil {
+	if _, err := tx.Exec(schemaStr); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
 		return err
 	}
 	return nil
