@@ -27,7 +27,7 @@ CREATE INDEX IF NOT EXISTS idx__forums_slug
 
 CREATE TABLE IF NOT EXISTS threads (
   id      SERIAL4 UNIQUE CONSTRAINT pk__threads_id PRIMARY KEY,
-  slug    CITEXT UNIQUE,
+  slug    CITEXT,
   author  CITEXT NOT NULL CONSTRAINT fk__threads_author__users_nickname REFERENCES users (nickname),
   created TIMESTAMPTZ(3) DEFAULT now(),
   forum   CITEXT NOT NULL CONSTRAINT fk__threads_forum__forums_slug REFERENCES forums (slug),

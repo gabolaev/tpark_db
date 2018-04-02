@@ -26,6 +26,7 @@ func CreateUser(context *fasthttp.RequestCtx) {
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
 		errorJSON, _ := easyjson.Marshal(models.Error{Message: err.Error()})
 		context.SetBody(errorJSON)
+		return
 	}
 
 	if responseBody, err := easyjson.Marshal(result); err != nil {
@@ -52,7 +53,7 @@ func GetUser(context *fasthttp.RequestCtx) {
 			Message: fmt.Sprintf("Can't find user with nickname: %s", nickname)})
 		context.SetBody(errorJSON)
 	} else {
-		if user, err := easyjson.Marshal(result); err != nil {
+		if user, err := easyjson.Marshal(*result); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
 		} else {
 			context.SetStatusCode(fasthttp.StatusOK)

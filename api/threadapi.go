@@ -25,13 +25,9 @@ func CreateThreadOrForum(context *fasthttp.RequestCtx) {
 	}
 
 	thread.Forum = param[1 : len(param)-7]
-	result, created, err := helpers.CreateNewOrGetExistingThread(&thread)
-	if err != nil {
-		context.SetStatusCode(fasthttp.StatusInternalServerError)
-		context.SetBodyString(err.Error())
-		return
-	}
-	if created {
+	result, code, err := helpers.CreateNewOrGetExistingThread(&thread)
+	switch code {
+	case 201:
 		if createdForumJSON, err := easyjson.Marshal(result); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
 			context.SetBodyString(err.Error())
@@ -39,20 +35,21 @@ func CreateThreadOrForum(context *fasthttp.RequestCtx) {
 			context.SetStatusCode(fasthttp.StatusCreated)
 			context.SetBody(createdForumJSON)
 		}
-	} else {
-		if result == nil {
-			errorJSON, _ := easyjson.Marshal(models.Error{
-				Message: "Can't find user or forum"})
-			context.SetStatusCode(fasthttp.StatusNotFound)
-			context.SetBody(errorJSON)
+	case 409:
+		if existingForumJSON, err := easyjson.Marshal(result); err != nil {
+			context.SetStatusCode(fasthttp.StatusInternalServerError)
+			context.SetBodyString(err.Error())
 		} else {
-			if existingForumJSON, err := easyjson.Marshal(result); err != nil {
-				context.SetStatusCode(fasthttp.StatusInternalServerError)
-				context.SetBodyString(err.Error())
-			} else {
-				context.SetStatusCode(fasthttp.StatusConflict)
-				context.SetBody(existingForumJSON)
-			}
+			context.SetStatusCode(fasthttp.StatusConflict)
+			context.SetBody(existingForumJSON)
 		}
+	case 404:
+		errorJSON, _ := easyjson.Marshal(models.Error{
+			Message: "Can't find user or forum"})
+		context.SetStatusCode(fasthttp.StatusNotFound)
+		context.SetBody(errorJSON)
+	default:
+		context.SetStatusCode(fasthttp.StatusInternalServerError)
+		context.SetBodyString(err.Error())
 	}
 }
