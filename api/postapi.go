@@ -37,7 +37,7 @@ func CreateThreadPosts(context *fasthttp.RequestCtx) {
 		errorObj = models.Error{Message: "Forum not found"}
 	case errors.ConflictError:
 		responseStatus = fasthttp.StatusConflict
-		errorObj = models.Error{Message: "Conflict parents"}
+		errorObj = models.Error{Message: "Conflict or wrong parents"}
 	default:
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
 		context.SetBodyString(err.Error())

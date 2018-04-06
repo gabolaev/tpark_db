@@ -56,6 +56,8 @@ CREATE INDEX IF NOT EXISTS idx__posts_id
   ON posts (id);
 
 CREATE TABLE IF NOT EXISTS votes (
+  thread   INTEGER CONSTRAINT fk__votes_thread__threads_id REFERENCES threads (id),
   nickname CITEXT   NOT NULL CONSTRAINT fo__votes_nickname__users_nickname REFERENCES users (nickname),
-  voice    SMALLINT NOT NULL
+  voice    SMALLINT NOT NULL,
+  UNIQUE (thread, nickname)
 );

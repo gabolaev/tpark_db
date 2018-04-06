@@ -3,9 +3,7 @@ package api
 import (
 	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/helpers"
-
 	"github.com/gabolaev/tpark_db/models"
-
 	"github.com/valyala/fasthttp"
 )
 
@@ -17,8 +15,7 @@ func CreateThreadOrForum(context *fasthttp.RequestCtx) {
 		return
 	}
 	var thread models.Thread
-	body := context.PostBody()
-	if err := thread.UnmarshalJSON(body); err != nil {
+	if err := thread.UnmarshalJSON(context.PostBody()); err != nil {
 		context.SetStatusCode(fasthttp.StatusBadRequest)
 		context.WriteString(err.Error())
 		return
@@ -50,4 +47,61 @@ func CreateThreadOrForum(context *fasthttp.RequestCtx) {
 		context.SetStatusCode(responseStatus)
 		context.SetBody(existingForumJSON)
 	}
+}
+
+func GetThreadDetails(context *fasthttp.RequestCtx) {
+	context.SetContentType("application/json")
+	slugOrID := context.UserValue("slug_or_id").(string)
+	var err error
+	var thread *models.Thread
+	thread, err = helpers.GetThreadDetailsBySlugOrID(&slugOrID)
+	switch err {
+	case nil:
+		if existingForumJSON, err := thread.MarshalJSON(); err != nil {
+			context.SetStatusCode(fasthttp.StatusInternalServerError)
+			context.SetBodyString(err.Error())
+		} else {
+			context.SetStatusCode(fasthttp.StatusOK)
+			context.SetBody(existingForumJSON)
+		}
+	case errors.NotFoundError:
+		err := models.Error{Message: "Can't find user or forum"}
+		errorJSON, _ := err.MarshalJSON()
+		context.SetStatusCode(fasthttp.StatusNotFound)
+		context.SetBody(errorJSON)
+	}
+
+}
+
+func UpdateThreadDetails(context *fasthttp.RequestCtx) {
+	context.SetContentType("application/json")
+	slugOrID := context.UserValue("slug_or_id").(string)
+	body := context.PostBody()
+	threadUpdate := models.ThreadUpdate{}
+	if err := threadUpdate.UnmarshalJSON(body); err != nil {
+		if err.Error() != "EOF" {
+			context.SetStatusCode(fasthttp.StatusBadRequest)
+			context.WriteString(err.Error())
+			return
+		}
+	}
+
+	thread, err := helpers.UpdateThreadDetails(&slugOrID, &threadUpdate)
+	switch err {
+	case nil:
+		if existingForumJSON, err := thread.MarshalJSON(); err != nil {
+			context.SetStatusCode(fasthttp.StatusInternalServerError)
+			context.SetBodyString(err.Error())
+		} else {
+			context.SetStatusCode(fasthttp.StatusOK)
+			context.SetBody(existingForumJSON)
+		}
+	case errors.NotFoundError:
+		err := models.Error{Message: "Can't find thread"}
+		errorJSON, _ := err.MarshalJSON()
+		context.SetStatusCode(fasthttp.StatusNotFound)
+		context.SetBody(errorJSON)
+	}
+	return
+
 }

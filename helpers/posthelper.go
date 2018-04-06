@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gabolaev/tpark_db/config"
 	"github.com/gabolaev/tpark_db/database"
 	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/models"
@@ -22,28 +23,25 @@ func CreatePostsByThreadSlugOrID(posts *models.Posts, slugOrID *string) (*models
 		}
 	}
 
-	tx, err := database.Instance.Pool.Begin()
-	if err != nil {
-		return nil, err
-	}
+	tx := database.StartTransaction()
 	defer tx.Rollback()
 
-	forumSlug, err := GetForumSlugByThreadID(&threadID)
+	forumSlug, err := GetThreadForum(&threadID)
 	if err != nil {
 		return nil, errors.NotFoundError
 	}
 	currentTime := time.Now()
-	currentTimeString := currentTime.Format("2006-01-02T15:04:05.000Z")
-	parentExists := 0
+	currentTimeString := currentTime.Format(config.Instance.API.TimestampFormat)
 	for _, post := range *posts {
 		if post.Parent != 0 {
-			err = tx.QueryRow("SELECT COUNT(*) FROM posts WHERE id = $1", post.Parent).Scan(&parentExists)
+			rows, err := tx.Query("SELECT 1 FROM posts WHERE id = $1 AND thread = $2", post.Parent, threadID)
 			if err != nil {
 				return nil, err
 			}
-			if parentExists != 1 {
+			if !rows.Next() {
 				return nil, errors.ConflictError
 			}
+			rows.Close()
 		}
 		err = tx.QueryRow(
 			`
@@ -54,16 +52,17 @@ func CreatePostsByThreadSlugOrID(posts *models.Posts, slugOrID *string) (*models
 		`, post.Author, forumSlug, currentTime, post.Message, post.Parent, threadID).
 			Scan(&post.ID)
 		if err != nil {
-			return nil, errors.ConflictError
+			return nil, errors.NotFoundError
 		}
 		post.Created = currentTimeString
 		post.Edited = false
 		post.Forum = forumSlug
 		post.Thread = threadID
+		err = IncrementCounters(&forumSlug, "posts")
+		if err != nil {
+			return nil, err
+		}
 	}
-	if err := tx.Commit(); err != nil {
-		tx.Rollback()
-		return nil, err
-	}
+	database.CommitTransaction(tx)
 	return posts, nil
 }

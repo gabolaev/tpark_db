@@ -36,6 +36,8 @@ func easyjsonD2b7633eDecodeGithubComGabolaevTparkDbModels(in *jlexer.Lexer, out 
 			continue
 		}
 		switch key {
+		case "thread":
+			out.Thread = int(in.Int())
 		case "nickname":
 			out.Nickname = string(in.String())
 		case "voice":
@@ -54,6 +56,16 @@ func easyjsonD2b7633eEncodeGithubComGabolaevTparkDbModels(out *jwriter.Writer, i
 	out.RawByte('{')
 	first := true
 	_ = first
+	{
+		const prefix string = ",\"thread\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int(int(in.Thread))
+	}
 	{
 		const prefix string = ",\"nickname\":"
 		if first {

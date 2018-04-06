@@ -53,11 +53,11 @@ func GetForumUsers(context *fasthttp.RequestCtx) {
 	// todo
 }
 
-func GetForumInfo(context *fasthttp.RequestCtx) {
+func GetForumDetails(context *fasthttp.RequestCtx) {
 
 	context.SetContentType("application/json")
 	slug := context.UserValue("slug").(string)
-	result, err := helpers.GetForumInfoBySlug(&slug)
+	result, err := helpers.GetForumDetailsBySlug(&slug)
 	switch err {
 	case nil:
 		if user, err := result.MarshalJSON(); err != nil {

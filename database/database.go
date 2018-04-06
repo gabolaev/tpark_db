@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"github.com/jackc/pgx"
@@ -55,4 +56,22 @@ func (i Database) LoadSchema(path string) error {
 		return err
 	}
 	return nil
+}
+
+func StartTransaction() *pgx.Tx {
+	tx, err := Instance.Pool.Begin()
+	// error probability is so small...
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	return tx
+}
+
+func CommitTransaction(tx *pgx.Tx) {
+	// error probability is so small...
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
+		fmt.Println(err)
+	}
 }

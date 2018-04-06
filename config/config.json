@@ -1,6 +1,9 @@
 {
     "Database": {
         "SchemaFile": "/Users/gabolaev/go/src/github.com/gabolaev/tpark_db/sql-schema/create.sql",
-        "Timestamp": "1998-04-27T00:00:00.000Z"
+        "TimestampFormat": "2006-01-02T15:04:05.000Z07:00"
+    },
+    "API":{
+        "TimestampFormat": "2006-01-02T15:04:05.000Z"
     }
 }

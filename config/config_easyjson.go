@@ -38,8 +38,8 @@ func easyjson6615c02eDecodeGithubComGabolaevTparkDbConfig(in *jlexer.Lexer, out 
 		switch key {
 		case "SchemaFile":
 			out.SchemaFile = string(in.String())
-		case "Timestamp":
-			out.Timestamp = string(in.String())
+		case "TimestampFormat":
+			out.TimestampFormat = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -65,14 +65,14 @@ func easyjson6615c02eEncodeGithubComGabolaevTparkDbConfig(out *jwriter.Writer, i
 		out.String(string(in.SchemaFile))
 	}
 	{
-		const prefix string = ",\"Timestamp\":"
+		const prefix string = ",\"TimestampFormat\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.Timestamp))
+		out.String(string(in.TimestampFormat))
 	}
 	out.RawByte('}')
 }
@@ -121,6 +121,8 @@ func easyjson6615c02eDecodeGithubComGabolaevTparkDbConfig1(in *jlexer.Lexer, out
 		switch key {
 		case "Database":
 			(out.Database).UnmarshalEasyJSON(in)
+		case "API":
+			(out.API).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -144,6 +146,16 @@ func easyjson6615c02eEncodeGithubComGabolaevTparkDbConfig1(out *jwriter.Writer, 
 			out.RawString(prefix)
 		}
 		(in.Database).MarshalEasyJSON(out)
+	}
+	{
+		const prefix string = ",\"API\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(in.API).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -170,4 +182,75 @@ func (v *Config) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Config) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson6615c02eDecodeGithubComGabolaevTparkDbConfig1(l, v)
+}
+func easyjson6615c02eDecodeGithubComGabolaevTparkDbConfig2(in *jlexer.Lexer, out *API) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "TimestampFormat":
+			out.TimestampFormat = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson6615c02eEncodeGithubComGabolaevTparkDbConfig2(out *jwriter.Writer, in API) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"TimestampFormat\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.TimestampFormat))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v API) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson6615c02eEncodeGithubComGabolaevTparkDbConfig2(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v API) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson6615c02eEncodeGithubComGabolaevTparkDbConfig2(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *API) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson6615c02eDecodeGithubComGabolaevTparkDbConfig2(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *API) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson6615c02eDecodeGithubComGabolaevTparkDbConfig2(l, v)
 }

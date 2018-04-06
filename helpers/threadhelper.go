@@ -3,40 +3,40 @@ package helpers
 import (
 	"time"
 
+	"github.com/gabolaev/tpark_db/config"
 	"github.com/gabolaev/tpark_db/database"
 	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/models"
 )
 
 func checkThreadSlugExisting(slug *string) (count int, err error) {
-	tx, err := database.Instance.Pool.Begin()
-	if err != nil {
-		return -1, err
-	}
+	tx := database.StartTransaction()
 	defer tx.Rollback()
-	_ = tx.QueryRow("SELECT COUNT(*) FROM threads WHERE slug = $1", slug).Scan(&count)
-	if err = tx.Commit(); err != nil {
-		return
-	}
+	_ = tx.QueryRow("SELECT 1 FROM threads WHERE slug = $1", slug).Scan(&count)
+	database.CommitTransaction(tx)
 	return
 }
 
-func GetThreadBySlug(slug *string) (*models.Thread, error) {
-	tx, err := database.Instance.Pool.Begin()
-	if err != nil {
-		return nil, err
-	}
+func GetThreadDetailsBySlugOrID(slugOrID *string) (*models.Thread, error) {
+	tx := database.StartTransaction()
 	defer tx.Rollback()
+
+	var fieldName string
+	if IsNumber(slugOrID) {
+		fieldName = "id"
+	} else {
+		fieldName = "slug"
+	}
 
 	createdInTime := time.Time{}
 	thread := models.Thread{}
-	err = tx.QueryRow(
+	err := tx.QueryRow(
 		`
 		SELECT id, slug, author, created AT TIME ZONE 'UTC', forum, message, title, votes
 		FROM threads
-		WHERE slug = $1
+		WHERE `+fieldName+` = $1
 		`,
-		*slug).Scan(
+		*slugOrID).Scan(
 		&thread.ID,
 		&thread.Slug,
 		&thread.Author,
@@ -47,48 +47,36 @@ func GetThreadBySlug(slug *string) (*models.Thread, error) {
 		&thread.Votes,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.NotFoundError
 	}
-	thread.Created = createdInTime.Format("2006-01-02T15:04:05.000Z")
-	if err := tx.Commit(); err != nil {
-		return nil, err
-	}
+	thread.Created = createdInTime.Format(config.Instance.API.TimestampFormat)
+	database.CommitTransaction(tx)
 	return &thread, nil
 }
 
-func GetForumSlugByThreadID(tID *int) (slug string, err error) {
-	tx, err := database.Instance.Pool.Begin()
-	if err != nil {
-		return
-	}
+func GetThreadForum(tID *int) (slug string, err error) {
+	tx := database.StartTransaction()
 	defer tx.Rollback()
 
 	err = tx.QueryRow("SELECT forum FROM threads WHERE id = $1", *tID).Scan(&slug)
-	if err = tx.Commit(); err != nil {
-		return
-	}
+	database.CommitTransaction(tx)
 	return
 }
 
 func GetThreadIDBySlug(slug *string) (result int, err error) {
-	tx, err := database.Instance.Pool.Begin()
-	if err != nil {
-		return
-	}
+	tx := database.StartTransaction()
 	defer tx.Rollback()
 
 	err = tx.QueryRow("SELECT id FROM threads WHERE slug = $1", slug).Scan(&result)
-	if err = tx.Commit(); err != nil {
-		return
+	if err != nil {
+		return -1, errors.NotFoundError
 	}
+	database.CommitTransaction(tx)
 	return
 }
 
 func CreateNewOrGetExistingThread(thread *models.Thread) (*models.Thread, error) {
-	tx, err := database.Instance.Pool.Begin()
-	if err != nil {
-		return nil, err
-	}
+	tx := database.StartTransaction()
 	defer tx.Rollback()
 
 	if thread.Slug != "" {
@@ -97,22 +85,21 @@ func CreateNewOrGetExistingThread(thread *models.Thread) (*models.Thread, error)
 			return nil, err
 		}
 		if slugCounts > 0 {
-			existThread, err := GetThreadBySlug(&thread.Slug)
+			existThread, err := GetThreadDetailsBySlugOrID(&thread.Slug)
 			if err != nil {
 				return nil, err
 			}
-			if err := tx.Commit(); err != nil {
-				return nil, err
-			}
+			database.CommitTransaction(tx)
 			return existThread, errors.ConflictError
 		}
 	}
 
+	var err error
 	var createdInTime time.Time
 	if thread.Created == "" {
 		createdInTime = time.Now()
 	} else {
-		createdInTime, err = time.Parse("2006-01-02T15:04:05.000Z07:00", thread.Created)
+		createdInTime, err = time.Parse(config.Instance.Database.TimestampFormat, thread.Created)
 		if err != nil {
 			return nil, err
 		}
@@ -135,19 +122,63 @@ func CreateNewOrGetExistingThread(thread *models.Thread) (*models.Thread, error)
 	if err != nil {
 		sError := err.Error()
 		if sError[len(sError)-2] == '5' {
-			thread, err := GetThreadBySlug(&thread.Slug)
+			thread, err := GetThreadDetailsBySlugOrID(&thread.Slug)
 			if err != nil {
 				return nil, err
 			}
-			if err := tx.Commit(); err != nil {
-				return nil, err
-			}
+			database.CommitTransaction(tx)
 			return thread, errors.ConflictError
 		}
 		return nil, errors.NotFoundError
 	}
-	if err := tx.Commit(); err != nil {
+	database.CommitTransaction(tx)
+	err = IncrementCounters(&thread.Forum, "threads")
+	if err != nil {
 		return nil, err
 	}
 	return thread, nil
+}
+
+func UpdateThreadDetails(slugOrID *string, threadUpdate *models.ThreadUpdate) (*models.Thread, error) {
+	var thread models.Thread
+
+	tx := database.StartTransaction()
+	defer tx.Rollback()
+	var createdIntime time.Time
+	var fieldName string
+	if IsNumber(slugOrID) {
+		fieldName = "id"
+	} else {
+		fieldName = "slug"
+	}
+	err := tx.QueryRow(
+		`
+		UPDATE threads
+		SET
+			message = coalesce(coalesce(nullif($2, ''), message)), 
+			title = coalesce(coalesce(nullif($3, ''), title))
+		WHERE
+			`+fieldName+` = $1
+		RETURNING
+			author,
+			created AT TIME ZONE 'UTC',
+			forum,
+			id,
+			message,
+			slug,
+			title
+		`, *slugOrID, threadUpdate.Message, threadUpdate.Title).Scan(
+		&thread.Author,
+		&createdIntime,
+		&thread.Forum,
+		&thread.ID,
+		&thread.Message,
+		&thread.Slug,
+		&thread.Title)
+	if err != nil {
+		return nil, errors.NotFoundError
+	}
+	thread.Created = createdIntime.Format(config.Instance.API.TimestampFormat)
+	database.CommitTransaction(tx)
+	return &thread, nil
 }

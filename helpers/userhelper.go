@@ -6,11 +6,22 @@ import (
 	"github.com/gabolaev/tpark_db/models"
 )
 
-func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, error) {
-	tx, err := database.Instance.Pool.Begin()
+func UserExists(nickname *string) bool {
+	tx := database.StartTransaction()
+	rows, err := tx.Query("SELECT 1 FROM users WHERE nickname = $1", nickname)
 	if err != nil {
-		return nil, err
+		return false
 	}
+	if rows.Next() {
+		rows.Close()
+		database.CommitTransaction(tx)
+		return true
+	}
+	return false
+}
+
+func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, error) {
+	tx := database.StartTransaction()
 	defer tx.Rollback()
 
 	users := models.Users{}
@@ -29,10 +40,7 @@ func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, error) {
 
 	if execResult.RowsAffected() != 0 {
 		users = append(users, user)
-		if err := tx.Commit(); err != nil {
-			tx.Rollback()
-			return nil, err
-		}
+		database.CommitTransaction(tx)
 		return &users, nil
 	}
 
@@ -58,22 +66,16 @@ func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, error) {
 		}
 		users = append(users, existingUser)
 	}
-	if err := tx.Commit(); err != nil {
-		tx.Rollback()
-		return nil, err
-	}
+	database.CommitTransaction(tx)
 	return &users, errors.ConflictError
 }
 
 func GetUserByNickname(nickname string) (*models.User, error) {
-	tx, err := database.Instance.Pool.Begin()
-	if err != nil {
-		return nil, err
-	}
+	tx := database.StartTransaction()
 	defer tx.Rollback()
 
 	findedUser := models.User{}
-	err = tx.QueryRow(
+	err := tx.QueryRow(
 		`
 		SELECT nickname, fullname, email, about 
 		FROM users 
@@ -87,21 +89,15 @@ func GetUserByNickname(nickname string) (*models.User, error) {
 	if err != nil {
 		return nil, errors.NotFoundError
 	}
-	if err := tx.Commit(); err != nil {
-		tx.Rollback()
-		return nil, err
-	}
+	database.CommitTransaction(tx)
 	return &findedUser, nil
 }
 
 func UpdateUserInfo(user *models.User) error {
-	tx, err := database.Instance.Pool.Begin()
-	if err != nil {
-		return err
-	}
+	tx := database.StartTransaction()
 	defer tx.Rollback()
 
-	err = tx.QueryRow(
+	err := tx.QueryRow(
 		`
 		UPDATE users
 		SET
@@ -124,9 +120,6 @@ func UpdateUserInfo(user *models.User) error {
 		}
 		return errors.NotFoundError
 	}
-	if err := tx.Commit(); err != nil {
-		tx.Rollback()
-		return err
-	}
+	database.CommitTransaction(tx)
 	return nil
 }

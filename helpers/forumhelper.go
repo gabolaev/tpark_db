@@ -5,21 +5,36 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gabolaev/tpark_db/config"
 	"github.com/gabolaev/tpark_db/database"
 	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/models"
 	"github.com/jackc/pgx"
 )
 
-func GetForumBySlug(slug *string) (*models.Forum, error) {
-	tx, err := database.Instance.Pool.Begin()
+func IncrementCounters(slug *string, fieldName string) error {
+	tx := database.StartTransaction()
+	defer tx.Rollback()
+
+	_, err := tx.Exec(
+		`
+		UPDATE forums
+		SET `+fieldName+` = `+fieldName+` + 1
+		WHERE slug = $1
+		`, slug)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	database.CommitTransaction(tx)
+	return nil
+}
+
+func GetForumBySlug(slug *string) (*models.Forum, error) {
+	tx := database.StartTransaction()
 	defer tx.Rollback()
 
 	forum := models.Forum{}
-	err = tx.QueryRow(
+	err := tx.QueryRow(
 		`
 		SELECT slug, posts, threads, title, "user"
 		FROM forums 
@@ -34,18 +49,12 @@ func GetForumBySlug(slug *string) (*models.Forum, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := tx.Commit(); err != nil {
-		tx.Rollback()
-		return nil, err
-	}
+	database.CommitTransaction(tx)
 	return &forum, nil
 }
 
 func CreateNewOrGetExistingForum(forum *models.Forum) (*models.Forum, error) {
-	tx, err := database.Instance.Pool.Begin()
-	if err != nil {
-		return nil, err
-	}
+	tx := database.StartTransaction()
 	defer tx.Rollback()
 
 	rows := tx.QueryRow(
@@ -60,7 +69,7 @@ func CreateNewOrGetExistingForum(forum *models.Forum) (*models.Forum, error) {
 		RETURNING "user"
 		`,
 		forum.Slug, forum.Title, forum.User)
-	err = rows.Scan(&forum.User)
+	err := rows.Scan(&forum.User)
 	if err != nil {
 		sError := err.Error()
 		if sError[len(sError)-2] == '5' {
@@ -71,22 +80,16 @@ func CreateNewOrGetExistingForum(forum *models.Forum) (*models.Forum, error) {
 	}
 	forum.Posts = 0
 	forum.Threads = 0
-	if err := tx.Commit(); err != nil {
-		tx.Rollback()
-		return nil, err
-	}
+	database.CommitTransaction(tx)
 	return forum, nil
 }
 
-func GetForumInfoBySlug(slug *string) (*models.Forum, error) {
-	tx, err := database.Instance.Pool.Begin()
-	if err != nil {
-		return nil, err
-	}
+func GetForumDetailsBySlug(slug *string) (*models.Forum, error) {
+	tx := database.StartTransaction()
 	defer tx.Rollback()
 
 	findedForum := models.Forum{}
-	err = tx.QueryRow(
+	err := tx.QueryRow(
 		`
 		SELECT posts, slug, threads, title, "user" 
 		FROM forums
@@ -101,10 +104,7 @@ func GetForumInfoBySlug(slug *string) (*models.Forum, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := tx.Commit(); err != nil {
-		tx.Rollback()
-		return nil, err
-	}
+	database.CommitTransaction(tx)
 	return &findedForum, nil
 }
 
@@ -134,15 +134,13 @@ func GetThreadsByForumSlug(slug *string, limit, desc, since []byte) (*models.Thr
 	if limit != nil {
 		queryStringBuffer.WriteString(fmt.Sprintf("\nLIMIT %s", limit))
 	}
-	tx, err := database.Instance.Pool.Begin()
-	if err != nil {
-		return nil, err
-	}
+	tx := database.StartTransaction()
 	defer tx.Rollback()
 
 	var rows *pgx.Rows
+	var err error
 	if len(since) != 0 {
-		sinceTime, err := time.Parse("2006-01-02T15:04:05.000Z07:00", string(since))
+		sinceTime, err := time.Parse(config.Instance.Database.TimestampFormat, string(since))
 		if err != nil {
 			return nil, err
 		}
@@ -168,22 +166,16 @@ func GetThreadsByForumSlug(slug *string, limit, desc, since []byte) (*models.Thr
 			&currRowThread.Votes); err != nil {
 			return nil, err
 		}
-		currRowThread.Created = createdInTime.Format("2006-01-02T15:04:05.000Z")
+		currRowThread.Created = createdInTime.Format(config.Instance.API.TimestampFormat)
 		threads = append(threads, &currRowThread)
 	}
 	if len(threads) == 0 {
-		cnt := 0
-		if err = tx.QueryRow("SELECT COUNT(*) FROM forums WHERE slug = $1", slug).Scan(&cnt); err != nil {
-			return nil, err
+		var threadsCount int
+		if err = tx.QueryRow("SELECT 1 FROM forums WHERE slug = $1", slug).Scan(&threadsCount); err != nil {
+			return nil, errors.NotFoundError
 		}
-		if cnt != 0 {
-			return nil, errors.EmptySearchError
-		}
-		return nil, errors.NotFoundError
+		return nil, errors.EmptySearchError
 	}
-	if err := tx.Commit(); err != nil {
-		tx.Rollback()
-		return nil, err
-	}
+	database.CommitTransaction(tx)
 	return &threads, nil
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 
 	"github.com/gabolaev/tpark_db/config"
 	"github.com/gabolaev/tpark_db/database"
@@ -11,25 +10,13 @@ import (
 )
 
 func main() {
-	var config config.Config
-	configBytes, err := ioutil.ReadFile("config/config.json")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	if err := config.UnmarshalJSON(configBytes); err != nil {
-		fmt.Println(err)
-		return
-	}
-
 	if err := database.Instance.Connect(); err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer database.Instance.Disconnect()
 
-	if err := database.Instance.LoadSchema(config.Database.SchemaFile); err != nil {
+	if err := database.Instance.LoadSchema(config.Instance.Database.SchemaFile); err != nil {
 		fmt.Println(err)
 		return
 	}
