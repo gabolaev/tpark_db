@@ -76,6 +76,7 @@ func GetThreadIDBySlug(slug *string) (result int, err error) {
 }
 
 func CreateNewOrGetExistingThread(thread *models.Thread) (*models.Thread, error) {
+	nowTime := time.Now()
 	tx := database.StartTransaction()
 	defer tx.Rollback()
 
@@ -97,7 +98,7 @@ func CreateNewOrGetExistingThread(thread *models.Thread) (*models.Thread, error)
 	var err error
 	var createdInTime time.Time
 	if thread.Created == "" {
-		createdInTime = time.Now()
+		createdInTime = nowTime
 	} else {
 		createdInTime, err = time.Parse(config.Instance.Database.TimestampFormat, thread.Created)
 		if err != nil {

@@ -3,6 +3,8 @@ package api
 import (
 	"fmt"
 
+	"github.com/gabolaev/tpark_db/database"
+
 	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/helpers"
 
@@ -43,6 +45,9 @@ func CreateForum(context *fasthttp.RequestCtx) {
 	if responseJSON, err := result.MarshalJSON(); err != nil {
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
 	} else {
+		defer func() {
+			database.Instance.Status.Forum++
+		}()
 		context.SetStatusCode(responseStatus)
 		context.SetBody(responseJSON)
 	}

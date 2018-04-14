@@ -2,14 +2,14 @@ package models
 
 //easyjson:json
 type Post struct {
-	ID      int64
-	Author  string
-	Created string
-	Forum   string
-	Edited  bool
-	Message string
-	Parent  int64
-	Thread  int
+	ID       int64
+	Author   string
+	Created  string
+	Forum    string
+	IsEdited bool
+	Message  string
+	Parent   int64
+	Thread   int
 }
 
 //easyjson:json

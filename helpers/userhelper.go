@@ -70,7 +70,7 @@ func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, error) {
 	return &users, errors.ConflictError
 }
 
-func GetUserByNickname(nickname string) (*models.User, error) {
+func GetUserByNickname(nickname *string) (*models.User, error) {
 	tx := database.StartTransaction()
 	defer tx.Rollback()
 
@@ -81,7 +81,7 @@ func GetUserByNickname(nickname string) (*models.User, error) {
 		FROM users 
 		WHERE nickname = $1
 		`,
-		nickname).Scan(
+		*nickname).Scan(
 		&findedUser.Nickname,
 		&findedUser.Fullname,
 		&findedUser.Email,

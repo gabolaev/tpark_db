@@ -1,6 +1,7 @@
 {
     "Database": {
         "SchemaFile": "/Users/gabolaev/go/src/github.com/gabolaev/tpark_db/sql-schema/create.sql",
+        "EraseFile": "/Users/gabolaev/go/src/github.com/gabolaev/tpark_db/sql-schema/erase.sql",
         "TimestampFormat": "2006-01-02T15:04:05.000Z07:00"
     },
     "API":{

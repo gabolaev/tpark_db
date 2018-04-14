@@ -38,6 +38,8 @@ func easyjson6615c02eDecodeGithubComGabolaevTparkDbConfig(in *jlexer.Lexer, out 
 		switch key {
 		case "SchemaFile":
 			out.SchemaFile = string(in.String())
+		case "EraseFile":
+			out.EraseFile = string(in.String())
 		case "TimestampFormat":
 			out.TimestampFormat = string(in.String())
 		default:
@@ -63,6 +65,16 @@ func easyjson6615c02eEncodeGithubComGabolaevTparkDbConfig(out *jwriter.Writer, i
 			out.RawString(prefix)
 		}
 		out.String(string(in.SchemaFile))
+	}
+	{
+		const prefix string = ",\"EraseFile\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.EraseFile))
 	}
 	{
 		const prefix string = ",\"TimestampFormat\":"

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/gabolaev/tpark_db/database"
 	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/helpers"
 	"github.com/gabolaev/tpark_db/models"
@@ -44,6 +45,9 @@ func CreateThreadOrForum(context *fasthttp.RequestCtx) {
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
 		context.SetBodyString(err.Error())
 	} else {
+		defer func() {
+			database.Instance.Status.Thread++
+		}()
 		context.SetStatusCode(responseStatus)
 		context.SetBody(existingForumJSON)
 	}

@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 
+	"github.com/gabolaev/tpark_db/database"
 	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/helpers"
 	"github.com/gabolaev/tpark_db/models"
@@ -32,6 +33,9 @@ func CreateUser(context *fasthttp.RequestCtx) {
 		if responseBody, err := result.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
 		} else {
+			defer func() {
+				database.Instance.Status.User++
+			}()
 			context.SetStatusCode(fasthttp.StatusCreated)
 			context.SetBody(responseBody[1 : len(responseBody)-1])
 		}
@@ -44,7 +48,7 @@ func CreateUser(context *fasthttp.RequestCtx) {
 func GetUser(context *fasthttp.RequestCtx) {
 	context.SetContentType("application/json")
 	nickname := context.UserValue("nickname").(string)
-	result, err := helpers.GetUserByNickname(nickname)
+	result, err := helpers.GetUserByNickname(&nickname)
 	switch err {
 	case nil:
 		if user, err := result.MarshalJSON(); err != nil {

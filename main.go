@@ -3,6 +3,10 @@ package main
 import (
 	"fmt"
 
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/gabolaev/tpark_db/config"
 	"github.com/gabolaev/tpark_db/database"
 	"github.com/gabolaev/tpark_db/router"
@@ -14,7 +18,15 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	defer database.Instance.Disconnect()
+	syscallChan := make(chan os.Signal, 1)
+	signal.Notify(syscallChan, syscall.SIGINT)
+
+	go func() {
+		<-syscallChan
+		fmt.Println("Signal emited")
+		database.Instance.Disconnect()
+		os.Exit(0)
+	}()
 
 	if err := database.Instance.LoadSchema(config.Instance.Database.SchemaFile); err != nil {
 		fmt.Println(err)

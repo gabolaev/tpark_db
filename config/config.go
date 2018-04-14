@@ -8,6 +8,7 @@ import (
 //easyjson:json
 type Database struct {
 	SchemaFile      string
+	EraseFile       string
 	TimestampFormat string
 }
 
