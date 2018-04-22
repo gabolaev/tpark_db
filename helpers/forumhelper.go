@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"bytes"
-	"fmt"
 	"time"
 
 	"github.com/gabolaev/tpark_db/config"
@@ -29,28 +28,12 @@ func IncrementCounters(slug *string, fieldName string) error {
 	return nil
 }
 
-func GetForumBySlug(slug *string) (*models.Forum, error) {
-	tx := database.StartTransaction()
-	defer tx.Rollback()
-
-	forum := models.Forum{}
-	err := tx.QueryRow(
-		`
-		SELECT slug, posts, threads, title, "user"
-		FROM forums 
-		WHERE slug = $1
-		`,
-		*slug).Scan(
-		&forum.Slug,
-		&forum.Posts,
-		&forum.Threads,
-		&forum.Title,
-		&forum.User)
-	if err != nil {
-		return nil, err
+func emptySearchOrNF(tx *pgx.Tx, slug *string) error {
+	var exists int
+	if err := tx.QueryRow("SELECT 1 FROM forums WHERE slug = $1", slug).Scan(&exists); err != nil {
+		return errors.NotFoundError
 	}
-	database.CommitTransaction(tx)
-	return &forum, nil
+	return errors.EmptySearchError
 }
 
 func CreateNewOrGetExistingForum(forum *models.Forum) (*models.Forum, error) {
@@ -73,7 +56,7 @@ func CreateNewOrGetExistingForum(forum *models.Forum) (*models.Forum, error) {
 	if err != nil {
 		sError := err.Error()
 		if sError[len(sError)-2] == '5' {
-			forum, err = GetForumBySlug(&forum.Slug)
+			forum, err = GetForumDetailsBySlug(&forum.Slug)
 			return forum, errors.ConflictError
 		}
 		return nil, errors.NotFoundError
@@ -115,31 +98,12 @@ func GetThreadsByForumSlug(slug *string, limit, desc, since []byte) (*models.Thr
 		SELECT author, created AT TIME ZONE 'UTC', forum, id, message, slug, title, votes
 		FROM threads 
 		WHERE forum = $1`)
-
-	faseDescChecker := false
-	if len(since) != 0 {
-		sign := ">"
-		if desc != nil && bytes.Equal([]byte("true"), desc) {
-			faseDescChecker = true
-			sign = "<"
-		}
-		queryStringBuffer.WriteString(fmt.Sprintf(" AND created %s= $2", sign))
-	}
-
-	queryStringBuffer.WriteString("\nORDER BY created")
-	if faseDescChecker || desc != nil && bytes.Equal([]byte("true"), desc) {
-		queryStringBuffer.WriteString(" DESC")
-	}
-
-	if limit != nil {
-		queryStringBuffer.WriteString(fmt.Sprintf("\nLIMIT %s", limit))
-	}
+	sinceExists := lsdBuilder(&queryStringBuffer, limit, since, desc, "created", true)
 	tx := database.StartTransaction()
 	defer tx.Rollback()
-
 	var rows *pgx.Rows
 	var err error
-	if len(since) != 0 {
+	if sinceExists {
 		sinceTime, err := time.Parse(config.Instance.Database.TimestampFormat, string(since))
 		if err != nil {
 			return nil, err
@@ -170,11 +134,7 @@ func GetThreadsByForumSlug(slug *string, limit, desc, since []byte) (*models.Thr
 		threads = append(threads, &currRowThread)
 	}
 	if len(threads) == 0 {
-		var threadsCount int
-		if err = tx.QueryRow("SELECT 1 FROM forums WHERE slug = $1", slug).Scan(&threadsCount); err != nil {
-			return nil, errors.NotFoundError
-		}
-		return nil, errors.EmptySearchError
+		return nil, emptySearchOrNF(tx, slug)
 	}
 	database.CommitTransaction(tx)
 	return &threads, nil
@@ -195,31 +155,14 @@ func GetForumUsersBySlug(slug *string, limit, desc, since []byte) (*models.Users
 		WHERE (p.forum = $1 OR t.forum = $1) 
 		`)
 
-	faseDescChecker := false
-	if len(since) != 0 {
-		sign := ">"
-		if desc != nil && bytes.Equal([]byte("true"), desc) {
-			faseDescChecker = true
-			sign = "<"
-		}
-		queryStringBuffer.WriteString(fmt.Sprintf(" AND u.nickname %s $2", sign))
-	}
-
-	queryStringBuffer.WriteString("\nORDER BY u.nickname")
-	if faseDescChecker || desc != nil && bytes.Equal([]byte("true"), desc) {
-		queryStringBuffer.WriteString(" DESC\n")
-	}
-
-	if limit != nil {
-		queryStringBuffer.WriteString(fmt.Sprintf("\nLIMIT %s", limit))
-	}
+	sinceExists := lsdBuilder(&queryStringBuffer, limit, since, desc, "u.nickname", false)
 	users := models.Users{}
 	tx := database.StartTransaction()
 	defer tx.Rollback()
-	fmt.Println(queryStringBuffer.String())
 	var rows *pgx.Rows
 	var err error
-	if len(since) != 0 {
+	println(queryStringBuffer.String())
+	if sinceExists {
 		rows, err = tx.Query(queryStringBuffer.String(), *slug, string(since))
 	} else {
 		rows, err = tx.Query(queryStringBuffer.String(), *slug)
@@ -240,13 +183,8 @@ func GetForumUsersBySlug(slug *string, limit, desc, since []byte) (*models.Users
 		users = append(users, &currUser)
 	}
 	rows.Close()
-	err = nil
 	if len(users) == 0 {
-		var forumExists int
-		if err = tx.QueryRow("SELECT 1 FROM forums WHERE slug = $1", slug).Scan(&forumExists); err != nil {
-			return nil, errors.NotFoundError
-		}
-		return nil, errors.EmptySearchError
+		return nil, emptySearchOrNF(tx, slug)
 	}
 	database.CommitTransaction(tx)
 	return &users, err
