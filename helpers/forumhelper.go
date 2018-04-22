@@ -98,7 +98,7 @@ func GetThreadsByForumSlug(slug *string, limit, desc, since []byte) (*models.Thr
 		SELECT author, created AT TIME ZONE 'UTC', forum, id, message, slug, title, votes
 		FROM threads 
 		WHERE forum = $1`)
-	sinceExists := lsdBuilder(&queryStringBuffer, limit, since, desc, "created", true)
+	sinceExists := lsdBuilder(&queryStringBuffer, limit, since, desc, "created", "created", true)
 	tx := database.StartTransaction()
 	defer tx.Rollback()
 	var rows *pgx.Rows
@@ -155,7 +155,7 @@ func GetForumUsersBySlug(slug *string, limit, desc, since []byte) (*models.Users
 		WHERE (p.forum = $1 OR t.forum = $1) 
 		`)
 
-	sinceExists := lsdBuilder(&queryStringBuffer, limit, since, desc, "u.nickname", false)
+	sinceExists := lsdBuilder(&queryStringBuffer, limit, since, desc, "u.nickname", "u.nickname", false)
 	users := models.Users{}
 	tx := database.StartTransaction()
 	defer tx.Rollback()

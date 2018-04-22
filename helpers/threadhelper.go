@@ -1,7 +1,12 @@
 package helpers
 
 import (
+	"bytes"
+	"fmt"
+	"strconv"
 	"time"
+
+	"github.com/jackc/pgx"
 
 	"github.com/gabolaev/tpark_db/config"
 	"github.com/gabolaev/tpark_db/database"
@@ -182,4 +187,66 @@ func UpdateThreadDetails(slugOrID *string, threadUpdate *models.ThreadUpdate) (*
 	thread.Created = createdIntime.Format(config.Instance.API.TimestampFormat)
 	database.CommitTransaction(tx)
 	return &thread, nil
+}
+
+func GetThreadPostsFlat(slugOrID *string, limit, since, desc []byte) (*models.Posts, error) {
+	var ID int
+	if IsNumber(slugOrID) {
+		ID, _ = strconv.Atoi(*slugOrID)
+	} else {
+		ID, _ = GetThreadIDBySlug(slugOrID)
+	}
+	posts := models.Posts{}
+	queryStringBuffer := bytes.Buffer{}
+	queryStringBuffer.WriteString(
+		`SELECT 
+			p.author,
+			p.created,
+			p.forum,
+			p.id,
+			p.Edited,
+			p.message,
+			p.parent,
+			p.thread
+		FROM posts p
+		WHERE p.thread = $1`)
+	sinceExists := lsdBuilder(&queryStringBuffer, limit, since, desc, "p.id", "p.id", false)
+	fmt.Println(queryStringBuffer.String())
+	tx := database.StartTransaction()
+	defer tx.Rollback()
+
+	var rows *pgx.Rows
+	var err error
+	fmt.Println(queryStringBuffer.String())
+	if sinceExists {
+		rows, err = tx.Query(queryStringBuffer.String(), ID, string(since))
+	} else {
+		rows, err = tx.Query(queryStringBuffer.String(), ID)
+	}
+	if err != nil {
+		return nil, err // TODO this
+	}
+	var createdInTime time.Time
+	for rows.Next() {
+		currentPost := models.Post{}
+		if err = rows.Scan(
+			&currentPost.Author,
+			&createdInTime,
+			&currentPost.Forum,
+			&currentPost.ID,
+			&currentPost.IsEdited,
+			&currentPost.Message,
+			&currentPost.Parent,
+			&currentPost.Thread,
+		); err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		currentPost.Created = createdInTime.Format(config.Instance.API.TimestampFormat)
+		posts = append(posts, &currentPost)
+	}
+	rows.Close()
+
+	database.CommitTransaction(tx)
+	return &posts, nil
 }

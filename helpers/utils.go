@@ -15,7 +15,7 @@ func IsNumber(slugOrID *string) bool {
 	return true
 }
 
-func lsdBuilder(queryStringBuffer *bytes.Buffer, limit, since, desc []byte, sinceString string, equality bool) (sinceExists bool) {
+func lsdBuilder(queryStringBuffer *bytes.Buffer, limit, since, desc []byte, sinceField, orderField string, equality bool) (sinceExists bool) {
 	faseDescChecker := false
 	if len(since) != 0 {
 		sinceExists = true
@@ -27,10 +27,10 @@ func lsdBuilder(queryStringBuffer *bytes.Buffer, limit, since, desc []byte, sinc
 		if equality {
 			sign += "="
 		}
-		queryStringBuffer.WriteString(fmt.Sprintf(" AND %s %s $2", sinceString, sign))
+		queryStringBuffer.WriteString(fmt.Sprintf(" AND %s %s $2", sinceField, sign))
 	}
 
-	queryStringBuffer.WriteString(fmt.Sprintf("\nORDER BY %s", sinceString))
+	queryStringBuffer.WriteString(fmt.Sprintf("\nORDER BY %s", orderField))
 	if faseDescChecker || desc != nil && bytes.Equal([]byte("true"), desc) {
 		queryStringBuffer.WriteString(" DESC")
 	}

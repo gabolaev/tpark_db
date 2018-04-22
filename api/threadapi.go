@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/gabolaev/tpark_db/database"
 	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/helpers"
@@ -108,4 +110,40 @@ func UpdateThreadDetails(context *fasthttp.RequestCtx) {
 	}
 	return
 
+}
+
+func GetThreadPosts(context *fasthttp.RequestCtx) {
+	context.SetContentType("application/json")
+	slugOrID := context.UserValue("slug_or_id").(string)
+	limit, desc, since :=
+		context.QueryArgs().Peek("limit"),
+		context.QueryArgs().Peek("desc"),
+		context.QueryArgs().Peek("since")
+	var result *models.Posts
+	var err error
+	switch string(context.QueryArgs().Peek("sort")) {
+	case "flat":
+		result, err = helpers.GetThreadPostsFlat(&slugOrID, limit, since, desc)
+	case "tree":
+		fmt.Println("implement")
+		return
+	case "parent_tree":
+		fmt.Println("implement")
+		return
+	}
+	switch err {
+	case nil:
+		if posts, err := result.MarshalJSON(); err != nil {
+			context.SetStatusCode(fasthttp.StatusInternalServerError)
+			context.SetBodyString(err.Error())
+		} else {
+			context.SetStatusCode(fasthttp.StatusOK)
+			context.SetBody(posts)
+		}
+	case errors.NotFoundError:
+		err := models.Error{Message: "Can't find thread with that slug or id"}
+		errorJSON, _ := err.MarshalJSON()
+		context.SetStatusCode(fasthttp.StatusNotFound)
+		context.SetBody(errorJSON)
+	}
 }
