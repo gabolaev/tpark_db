@@ -16,8 +16,8 @@ func init() {
 	Instance.GET("/forum/:slug/threads", api.GetForumThreads)
 	Instance.GET("/post/:id/details", api.GetPostDetails)
 	Instance.POST("/post/:id/details", api.UpdatePost)
-	Instance.GET("/service/status", api.Status)
-	Instance.POST("/service/clear", api.Clear)
+	// Instance.GET("/service/status", api.Status)
+	// Instance.POST("/service/clear", api.Clear)
 
 	Instance.GET("/thread/:slug_or_id/details", api.GetThreadDetails)
 	// Instance.GET("/thread/:slug_or_id/posts", api.GetThreadPosts)

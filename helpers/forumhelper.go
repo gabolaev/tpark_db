@@ -179,3 +179,75 @@ func GetThreadsByForumSlug(slug *string, limit, desc, since []byte) (*models.Thr
 	database.CommitTransaction(tx)
 	return &threads, nil
 }
+
+func GetForumUsersBySlug(slug *string, limit, desc, since []byte) (*models.Users, error) {
+	var queryStringBuffer bytes.Buffer
+	queryStringBuffer.WriteString(
+		`
+		SELECT DISTINCT 
+			u.nickname, 
+			u.email, 
+			u.fullname,
+			u.about
+		FROM users u
+			LEFT JOIN threads t on u.nickname = t.author
+			LEFT JOIN posts p on u.nickname = p.author
+		WHERE (p.forum = $1 OR t.forum = $1) 
+		`)
+
+	faseDescChecker := false
+	if len(since) != 0 {
+		sign := ">"
+		if desc != nil && bytes.Equal([]byte("true"), desc) {
+			faseDescChecker = true
+			sign = "<"
+		}
+		queryStringBuffer.WriteString(fmt.Sprintf(" AND u.nickname %s $2", sign))
+	}
+
+	queryStringBuffer.WriteString("\nORDER BY u.nickname")
+	if faseDescChecker || desc != nil && bytes.Equal([]byte("true"), desc) {
+		queryStringBuffer.WriteString(" DESC\n")
+	}
+
+	if limit != nil {
+		queryStringBuffer.WriteString(fmt.Sprintf("\nLIMIT %s", limit))
+	}
+	users := models.Users{}
+	tx := database.StartTransaction()
+	defer tx.Rollback()
+	fmt.Println(queryStringBuffer.String())
+	var rows *pgx.Rows
+	var err error
+	if len(since) != 0 {
+		rows, err = tx.Query(queryStringBuffer.String(), *slug, string(since))
+	} else {
+		rows, err = tx.Query(queryStringBuffer.String(), *slug)
+	}
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		currUser := models.User{}
+		if err := rows.Scan(
+			&currUser.Nickname,
+			&currUser.Email,
+			&currUser.Fullname,
+			&currUser.About,
+		); err != nil {
+			return nil, err
+		}
+		users = append(users, &currUser)
+	}
+	rows.Close()
+	err = nil
+	if len(users) == 0 {
+		var forumExists int
+		if err = tx.QueryRow("SELECT 1 FROM forums WHERE slug = $1", slug).Scan(&forumExists); err != nil {
+			return nil, errors.NotFoundError
+		}
+		return nil, errors.EmptySearchError
+	}
+	database.CommitTransaction(tx)
+	return &users, err
+}

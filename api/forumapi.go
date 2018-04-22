@@ -54,10 +54,6 @@ func CreateForum(context *fasthttp.RequestCtx) {
 
 }
 
-func GetForumUsers(context *fasthttp.RequestCtx) {
-	// todo
-}
-
 func GetForumDetails(context *fasthttp.RequestCtx) {
 
 	context.SetContentType("application/json")
@@ -106,5 +102,31 @@ func GetForumThreads(context *fasthttp.RequestCtx) {
 	default:
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
 		context.SetBodyString(err.Error())
+	}
+}
+
+func GetForumUsers(context *fasthttp.RequestCtx) {
+	context.SetContentType("application/json")
+	slug := context.UserValue("slug").(string)
+	limit, desc, since := context.QueryArgs().Peek("limit"), context.QueryArgs().Peek("desc"), context.QueryArgs().Peek("since")
+	result, err := helpers.GetForumUsersBySlug(&slug, limit, desc, since)
+	switch err {
+	case nil:
+		if users, err := result.MarshalJSON(); err != nil {
+			context.SetStatusCode(fasthttp.StatusInternalServerError)
+			context.SetBodyString(err.Error())
+		} else {
+			context.SetStatusCode(fasthttp.StatusOK)
+			context.SetBody(users)
+		}
+	case errors.EmptySearchError:
+		context.SetStatusCode(fasthttp.StatusOK)
+		context.SetBody([]byte{91, 93})
+	case errors.NotFoundError:
+		context.SetStatusCode(fasthttp.StatusNotFound)
+		err := models.Error{
+			Message: fmt.Sprintf("Can't find forum with slug: %s", slug)}
+		errorJSON, _ := err.MarshalJSON()
+		context.SetBody(errorJSON)
 	}
 }
