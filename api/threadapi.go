@@ -83,7 +83,7 @@ func UpdateThreadDetails(context *fasthttp.RequestCtx) {
 	context.SetContentType("application/json")
 	slugOrID := context.UserValue("slug_or_id").(string)
 	body := context.PostBody()
-	threadUpdate := models.ThreadUpdate{}
+	var threadUpdate models.ThreadUpdate
 	if err := threadUpdate.UnmarshalJSON(body); err != nil {
 		if err.Error() != "EOF" {
 			context.SetStatusCode(fasthttp.StatusBadRequest)
@@ -125,8 +125,7 @@ func GetThreadPosts(context *fasthttp.RequestCtx) {
 	case "flat":
 		result, err = helpers.GetThreadPostsFlat(&slugOrID, limit, since, desc)
 	case "tree":
-		fmt.Println("implement")
-		return
+		result, err = helpers.GetThreadPostsTree(&slugOrID, limit, since, desc)
 	case "parent_tree":
 		fmt.Println("implement")
 		return
@@ -145,5 +144,8 @@ func GetThreadPosts(context *fasthttp.RequestCtx) {
 		errorJSON, _ := err.MarshalJSON()
 		context.SetStatusCode(fasthttp.StatusNotFound)
 		context.SetBody(errorJSON)
+	case errors.EmptySearchError:
+		context.SetStatusCode(fasthttp.StatusOK)
+		context.SetBody([]byte{91, 93})
 	}
 }

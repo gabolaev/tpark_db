@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS posts (
   edited  BOOLEAN      DEFAULT FALSE,
   message TEXT   NOT NULL,
   parent  BIGINT       DEFAULT 0,
+  path    BIGINT [],
   thread  INTEGER CONSTRAINT fk__posts_thread__threads_id REFERENCES threads (id)
 );
 

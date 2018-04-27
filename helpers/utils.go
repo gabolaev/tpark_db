@@ -19,10 +19,12 @@ func lsdBuilder(queryStringBuffer *bytes.Buffer, limit, since, desc []byte, sinc
 	faseDescChecker := false
 	if len(since) != 0 {
 		sinceExists = true
-		sign := ">"
+		var sign string
 		if desc != nil && bytes.Equal([]byte("true"), desc) {
 			faseDescChecker = true
 			sign = "<"
+		} else {
+			sign = ">"
 		}
 		if equality {
 			sign += "="
@@ -35,7 +37,8 @@ func lsdBuilder(queryStringBuffer *bytes.Buffer, limit, since, desc []byte, sinc
 		queryStringBuffer.WriteString(" DESC")
 	}
 
-	if limit != nil {
+	var strLimit = string(limit)
+	if limit != nil && IsNumber(&strLimit) {
 		queryStringBuffer.WriteString(fmt.Sprintf("\nLIMIT %s", limit))
 	}
 	return

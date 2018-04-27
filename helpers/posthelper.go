@@ -8,7 +8,16 @@ import (
 	"github.com/gabolaev/tpark_db/database"
 	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/models"
+	"github.com/jackc/pgx"
 )
+
+func EmptyPostSearchOrNF(tx *pgx.Tx, id int) error {
+	var exists int
+	if err := tx.QueryRow("SELECT 1 FROM posts WHERE id = $1", id).Scan(&exists); err != nil {
+		return errors.NotFoundError
+	}
+	return errors.EmptySearchError
+}
 
 func CreatePostsByThreadSlugOrID(posts *models.Posts, slugOrID *string) (*models.Posts, error) {
 	var threadID int
@@ -32,19 +41,31 @@ func CreatePostsByThreadSlugOrID(posts *models.Posts, slugOrID *string) (*models
 	}
 	currentTime := time.Now()
 	for _, post := range *posts {
+		path := make([]int64, 1)
 		if post.Parent != 0 {
-			rows, err := tx.Query("SELECT 1 FROM posts WHERE id = $1 AND thread = $2", post.Parent, threadID)
+			rows, err := tx.Query("SELECT path FROM posts WHERE id = $1 AND thread = $2", post.Parent, threadID)
 			if err != nil {
 				return nil, err
 			}
-			if !rows.Next() {
+			if rows.Next() {
+				err = rows.Scan(&path)
+				if err != nil {
+					return nil, err
+				}
+			} else {
 				return nil, errors.ConflictError
 			}
 			rows.Close()
 		}
 		err = tx.QueryRow(
 			`
-		INSERT INTO posts (author, forum, created, message, parent, thread)
+		INSERT INTO posts (
+			author, 
+			forum, 
+			created, 
+			message, 
+			parent, 
+			thread)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created
 		`, post.Author, forumSlug, currentTime, post.Message, post.Parent, threadID).
@@ -60,6 +81,14 @@ func CreatePostsByThreadSlugOrID(posts *models.Posts, slugOrID *string) (*models
 		if err != nil {
 			return nil, err
 		}
+		path = append(path, post.ID)
+		if _, err := tx.Exec(`
+			UPDATE posts
+			SET path = $2
+			WHERE id = $1
+			`, post.ID, path); err != nil {
+			return nil, err
+		}
 	}
 	database.CommitTransaction(tx)
 	return posts, nil
@@ -69,7 +98,7 @@ func GetPostDetails(id *string) (*models.Post, error) {
 	tx := database.StartTransaction()
 	defer tx.Rollback()
 
-	post := models.Post{}
+	var post models.Post
 
 	var createdInTime time.Time
 	err := tx.QueryRow(
@@ -106,8 +135,7 @@ func GetPostDetails(id *string) (*models.Post, error) {
 }
 
 func GetPostFullDetails(id *string, relatedParams []string) (*models.PostFull, error) {
-
-	postFull := models.PostFull{}
+	var postFull models.PostFull
 	var err error
 	for _, value := range relatedParams {
 		switch value {

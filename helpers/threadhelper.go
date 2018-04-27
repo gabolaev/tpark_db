@@ -34,7 +34,7 @@ func GetThreadDetailsBySlugOrID(slugOrID *string) (*models.Thread, error) {
 	}
 
 	createdInTime := time.Time{}
-	thread := models.Thread{}
+	var thread models.Thread
 	err := tx.QueryRow(
 		`
 		SELECT id, slug, author, created AT TIME ZONE 'UTC', forum, message, title, votes
@@ -196,7 +196,7 @@ func GetThreadPostsFlat(slugOrID *string, limit, since, desc []byte) (*models.Po
 	} else {
 		ID, _ = GetThreadIDBySlug(slugOrID)
 	}
-	posts := models.Posts{}
+	var posts models.Posts
 	queryStringBuffer := bytes.Buffer{}
 	queryStringBuffer.WriteString(
 		`SELECT 
@@ -228,7 +228,7 @@ func GetThreadPostsFlat(slugOrID *string, limit, since, desc []byte) (*models.Po
 	}
 	var createdInTime time.Time
 	for rows.Next() {
-		currentPost := models.Post{}
+		var currentPost models.Post
 		if err = rows.Scan(
 			&currentPost.Author,
 			&createdInTime,
@@ -246,7 +246,83 @@ func GetThreadPostsFlat(slugOrID *string, limit, since, desc []byte) (*models.Po
 		posts = append(posts, &currentPost)
 	}
 	rows.Close()
+	if len(posts) == 0 {
+		return nil, EmptyPostSearchOrNF(tx, ID)
+	}
+	database.CommitTransaction(tx)
+	return &posts, nil
+}
 
+func GetThreadPostsTree(slugOrID *string, limit, since, desc []byte) (*models.Posts, error) {
+	var ID int
+	if IsNumber(slugOrID) {
+		ID, _ = strconv.Atoi(*slugOrID)
+	} else {
+		ID, _ = GetThreadIDBySlug(slugOrID)
+	}
+	var posts models.Posts
+	var queryStringBuffer bytes.Buffer
+	queryStringBuffer.WriteString(
+		`SELECT 
+			p.author,
+			p.created,
+			p.forum,
+			p.id,
+			p.Edited,
+			p.message,
+			p.parent,
+			p.thread
+		FROM posts p
+		WHERE p.thread = $1`)
+	sinceExists := lsdBuilder(
+		&queryStringBuffer,
+		limit,
+		since,
+		desc,
+		"p.path",
+		"p.path",
+		false)
+
+	fmt.Println(queryStringBuffer.String())
+	tx := database.StartTransaction()
+	defer tx.Rollback()
+
+	var rows *pgx.Rows
+	var err error
+	fmt.Println(queryStringBuffer.String())
+	if sinceExists {
+		var path []int64
+		_ = tx.QueryRow("SELECT path FROM posts WHERE id = $1::TEXT::INTEGER", since).Scan(&path)
+		rows, err = tx.Query(queryStringBuffer.String(), ID, path)
+	} else {
+		rows, err = tx.Query(queryStringBuffer.String(), ID)
+	}
+	if err != nil {
+		return nil, err // TODO this
+	}
+	var createdInTime time.Time
+	for rows.Next() {
+		var currentPost models.Post
+		if err = rows.Scan(
+			&currentPost.Author,
+			&createdInTime,
+			&currentPost.Forum,
+			&currentPost.ID,
+			&currentPost.IsEdited,
+			&currentPost.Message,
+			&currentPost.Parent,
+			&currentPost.Thread,
+		); err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		currentPost.Created = createdInTime.Format(config.Instance.API.TimestampFormat)
+		posts = append(posts, &currentPost)
+	}
+	rows.Close()
+	if len(posts) == 0 {
+		return nil, EmptyPostSearchOrNF(tx, ID)
+	}
 	database.CommitTransaction(tx)
 	return &posts, nil
 }

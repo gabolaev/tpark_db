@@ -24,7 +24,7 @@ func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, error) {
 	tx := database.StartTransaction()
 	defer tx.Rollback()
 
-	users := models.Users{}
+	var users models.Users
 	execResult, err := tx.Exec(
 		`
 		INSERT
@@ -74,7 +74,7 @@ func GetUserByNickname(nickname *string) (*models.User, error) {
 	tx := database.StartTransaction()
 	defer tx.Rollback()
 
-	findedUser := models.User{}
+	var findedUser models.User
 	err := tx.QueryRow(
 		`
 		SELECT nickname, fullname, email, about 

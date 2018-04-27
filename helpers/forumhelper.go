@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"bytes"
+	"fmt"
 	"time"
 
 	"github.com/gabolaev/tpark_db/config"
@@ -28,7 +29,7 @@ func IncrementCounters(slug *string, fieldName string) error {
 	return nil
 }
 
-func emptySearchOrNF(tx *pgx.Tx, slug *string) error {
+func emptyForumSearchOrNF(tx *pgx.Tx, slug *string) error {
 	var exists int
 	if err := tx.QueryRow("SELECT 1 FROM forums WHERE slug = $1", slug).Scan(&exists); err != nil {
 		return errors.NotFoundError
@@ -71,7 +72,7 @@ func GetForumDetailsBySlug(slug *string) (*models.Forum, error) {
 	tx := database.StartTransaction()
 	defer tx.Rollback()
 
-	findedForum := models.Forum{}
+	var findedForum models.Forum
 	err := tx.QueryRow(
 		`
 		SELECT posts, slug, threads, title, "user" 
@@ -103,6 +104,7 @@ func GetThreadsByForumSlug(slug *string, limit, desc, since []byte) (*models.Thr
 	defer tx.Rollback()
 	var rows *pgx.Rows
 	var err error
+	fmt.Println(queryStringBuffer.String())
 	if sinceExists {
 		sinceTime, err := time.Parse(config.Instance.Database.TimestampFormat, string(since))
 		if err != nil {
@@ -117,7 +119,7 @@ func GetThreadsByForumSlug(slug *string, limit, desc, since []byte) (*models.Thr
 	}
 	var threads models.Threads
 	for rows.Next() {
-		currRowThread := models.Thread{}
+		var currRowThread models.Thread
 		var createdInTime time.Time
 		if err = rows.Scan(
 			&currRowThread.Author,
@@ -134,7 +136,7 @@ func GetThreadsByForumSlug(slug *string, limit, desc, since []byte) (*models.Thr
 		threads = append(threads, &currRowThread)
 	}
 	if len(threads) == 0 {
-		return nil, emptySearchOrNF(tx, slug)
+		return nil, emptyForumSearchOrNF(tx, slug)
 	}
 	database.CommitTransaction(tx)
 	return &threads, nil
@@ -156,7 +158,7 @@ func GetForumUsersBySlug(slug *string, limit, desc, since []byte) (*models.Users
 		`)
 
 	sinceExists := lsdBuilder(&queryStringBuffer, limit, since, desc, "u.nickname", "u.nickname", false)
-	users := models.Users{}
+	var users models.Users
 	tx := database.StartTransaction()
 	defer tx.Rollback()
 	var rows *pgx.Rows
@@ -171,7 +173,7 @@ func GetForumUsersBySlug(slug *string, limit, desc, since []byte) (*models.Users
 		return nil, err
 	}
 	for rows.Next() {
-		currUser := models.User{}
+		var currUser models.User
 		if err := rows.Scan(
 			&currUser.Nickname,
 			&currUser.Email,
@@ -184,7 +186,7 @@ func GetForumUsersBySlug(slug *string, limit, desc, since []byte) (*models.Users
 	}
 	rows.Close()
 	if len(users) == 0 {
-		return nil, emptySearchOrNF(tx, slug)
+		return nil, emptyForumSearchOrNF(tx, slug)
 	}
 	database.CommitTransaction(tx)
 	return &users, err

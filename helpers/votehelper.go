@@ -11,7 +11,7 @@ import (
 )
 
 func UpdateOrAddThreadVote(vote *models.Vote, coeff int) (*models.Thread, error) {
-	thread := models.Thread{}
+	var thread models.Thread
 	tx := database.StartTransaction()
 	defer tx.Rollback()
 	var createdInTime time.Time
