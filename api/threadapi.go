@@ -114,6 +114,7 @@ func UpdateThreadDetails(context *fasthttp.RequestCtx) {
 
 func GetThreadPosts(context *fasthttp.RequestCtx) {
 	context.SetContentType("application/json")
+	fmt.Println(context.QueryArgs())
 	slugOrID := context.UserValue("slug_or_id").(string)
 	limit, desc, since :=
 		context.QueryArgs().Peek("limit"),
@@ -122,13 +123,12 @@ func GetThreadPosts(context *fasthttp.RequestCtx) {
 	var result *models.Posts
 	var err error
 	switch string(context.QueryArgs().Peek("sort")) {
-	case "flat":
-		result, err = helpers.GetThreadPostsFlat(&slugOrID, limit, since, desc)
 	case "tree":
 		result, err = helpers.GetThreadPostsTree(&slugOrID, limit, since, desc)
 	case "parent_tree":
-		fmt.Println("implement")
-		return
+		result, err = helpers.GetThreadPostsParentTree(&slugOrID, limit, since, desc)
+	default:
+		result, err = helpers.GetThreadPostsFlat(&slugOrID, limit, since, desc)
 	}
 	switch err {
 	case nil:

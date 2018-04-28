@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"bytes"
-	"fmt"
 	"time"
 
 	"github.com/gabolaev/tpark_db/config"
@@ -104,7 +103,6 @@ func GetThreadsByForumSlug(slug *string, limit, desc, since []byte) (*models.Thr
 	defer tx.Rollback()
 	var rows *pgx.Rows
 	var err error
-	fmt.Println(queryStringBuffer.String())
 	if sinceExists {
 		sinceTime, err := time.Parse(config.Instance.Database.TimestampFormat, string(since))
 		if err != nil {
@@ -163,7 +161,6 @@ func GetForumUsersBySlug(slug *string, limit, desc, since []byte) (*models.Users
 	defer tx.Rollback()
 	var rows *pgx.Rows
 	var err error
-	println(queryStringBuffer.String())
 	if sinceExists {
 		rows, err = tx.Query(queryStringBuffer.String(), *slug, string(since))
 	} else {

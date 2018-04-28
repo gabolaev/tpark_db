@@ -13,7 +13,7 @@ import (
 
 func EmptyPostSearchOrNF(tx *pgx.Tx, id int) error {
 	var exists int
-	if err := tx.QueryRow("SELECT 1 FROM posts WHERE id = $1", id).Scan(&exists); err != nil {
+	if err := tx.QueryRow("SELECT 1 FROM threads WHERE id = $1", id).Scan(&exists); err != nil {
 		return errors.NotFoundError
 	}
 	return errors.EmptySearchError

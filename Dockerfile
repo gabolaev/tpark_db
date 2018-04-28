@@ -17,6 +17,7 @@ USER postgres
 RUN /etc/init.d/postgresql start &&\
     psql --command "CREATE USER forum WITH SUPERUSER PASSWORD 'forum';" &&\
     createdb -O forum forum &&\
+    psql -d forum -c "CREATE EXTENSION IF NOT EXISTS citext;" &&\
     /etc/init.d/postgresql stop
 
 USER root
@@ -44,12 +45,9 @@ ENV PATH $GOROOT/bin:$GOPATH/bin:$PATH
 RUN mkdir -p "$GOPATH/bin" "$GOPATH/src"
 ADD ./ $GOPATH/src/$REPO
 WORKDIR $GOPATH/src/$REPO
-RUN go install .
 RUN go build
 EXPOSE 5000
 
 RUN echo "./config/postgresql.conf" >> /etc/postgresql/$PGVERSION/main/postgresql.conf
 USER postgres
 CMD /etc/init.d/postgresql start && ./tpark_db
-
-

@@ -68,16 +68,17 @@ func GetThreadForum(tID *int) (slug string, err error) {
 	return
 }
 
-func GetThreadIDBySlug(slug *string) (result int, err error) {
+func GetThreadIDBySlug(slug *string) (int, error) {
+	var result int
 	tx := database.StartTransaction()
 	defer tx.Rollback()
 
-	err = tx.QueryRow("SELECT id FROM threads WHERE slug = $1", slug).Scan(&result)
+	err := tx.QueryRow("SELECT id FROM threads WHERE slug = $1", slug).Scan(&result)
 	if err != nil {
 		return -1, errors.NotFoundError
 	}
 	database.CommitTransaction(tx)
-	return
+	return result, nil
 }
 
 func CreateNewOrGetExistingThread(thread *models.Thread) (*models.Thread, error) {
@@ -191,10 +192,14 @@ func UpdateThreadDetails(slugOrID *string, threadUpdate *models.ThreadUpdate) (*
 
 func GetThreadPostsFlat(slugOrID *string, limit, since, desc []byte) (*models.Posts, error) {
 	var ID int
+	var err error
 	if IsNumber(slugOrID) {
 		ID, _ = strconv.Atoi(*slugOrID)
 	} else {
-		ID, _ = GetThreadIDBySlug(slugOrID)
+		ID, err = GetThreadIDBySlug(slugOrID)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var posts models.Posts
 	queryStringBuffer := bytes.Buffer{}
@@ -216,7 +221,6 @@ func GetThreadPostsFlat(slugOrID *string, limit, since, desc []byte) (*models.Po
 	defer tx.Rollback()
 
 	var rows *pgx.Rows
-	var err error
 	fmt.Println(queryStringBuffer.String())
 	if sinceExists {
 		rows, err = tx.Query(queryStringBuffer.String(), ID, string(since))
@@ -283,10 +287,8 @@ func GetThreadPostsTree(slugOrID *string, limit, since, desc []byte) (*models.Po
 		"p.path",
 		false)
 
-	fmt.Println(queryStringBuffer.String())
 	tx := database.StartTransaction()
 	defer tx.Rollback()
-
 	var rows *pgx.Rows
 	var err error
 	fmt.Println(queryStringBuffer.String())
@@ -299,6 +301,110 @@ func GetThreadPostsTree(slugOrID *string, limit, since, desc []byte) (*models.Po
 	}
 	if err != nil {
 		return nil, err // TODO this
+	}
+	var createdInTime time.Time
+	for rows.Next() {
+		var currentPost models.Post
+		if err = rows.Scan(
+			&currentPost.Author,
+			&createdInTime,
+			&currentPost.Forum,
+			&currentPost.ID,
+			&currentPost.IsEdited,
+			&currentPost.Message,
+			&currentPost.Parent,
+			&currentPost.Thread,
+		); err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		currentPost.Created = createdInTime.Format(config.Instance.API.TimestampFormat)
+		posts = append(posts, &currentPost)
+	}
+	rows.Close()
+	if len(posts) == 0 {
+		return nil, EmptyPostSearchOrNF(tx, ID)
+	}
+	database.CommitTransaction(tx)
+	return &posts, nil
+}
+
+func GetThreadPostsParentTree(slugOrID *string, limit, since, desc []byte) (*models.Posts, error) {
+	var ID int
+	if IsNumber(slugOrID) {
+		ID, _ = strconv.Atoi(*slugOrID)
+	} else {
+		ID, _ = GetThreadIDBySlug(slugOrID)
+	}
+	posts := models.Posts{}
+	var queryStringBuffer bytes.Buffer
+	queryStringBuffer.WriteString(
+		`SELECT 
+			p.author,
+			p.created,
+			p.forum,
+			p.id,
+			p.Edited,
+			p.message,
+			p.parent,
+			p.thread
+		FROM posts p
+		JOIN (SELECT id
+				FROM posts
+				WHERE parent = 0 AND
+					  thread = $1`)
+
+	// here we need a custom lsd constructor,
+	// because it is more complex query than the previous ones
+
+	// limits
+
+	// setting since
+	strLimit := string(limit)
+	if since != nil {
+		strSince := string(since)
+		if IsNumber(&strSince) && IsNumber(&strLimit) {
+			if desc != nil && bytes.Equal([]byte("true"), desc) {
+				queryStringBuffer.WriteString(`
+					AND path [2] < (SELECT path [2]
+									FROM posts
+									WHERE id = ` + strSince + `)
+			  		ORDER BY path DESC, thread DESC
+			  		LIMIT ` + strLimit + `) AS pars ON (thread = $1 AND pars.id = path [2])
+	  				ORDER BY path [2] DESC, path[3:]`)
+			} else {
+				queryStringBuffer.WriteString(`
+					AND
+					path > (SELECT path
+							FROM posts
+							WHERE id = ` + strSince + `)
+					ORDER BY id
+					LIMIT ` + strLimit + `) AS pars ON (thread = $1 AND pars.id = path [2])
+	  				ORDER BY path`)
+			}
+		}
+	} else {
+		if IsNumber(&strLimit) {
+			if desc != nil && bytes.Equal([]byte("true"), desc) {
+				queryStringBuffer.WriteString(`
+					ORDER BY path DESC
+        			LIMIT ` + strLimit + `) AS pars ON (pars.id = path [2] AND thread = $1)
+					ORDER BY path [2] DESC, path`)
+			} else {
+				queryStringBuffer.WriteString(`
+					ORDER BY id
+        			LIMIT ` + strLimit + `) AS pars ON (pars.id = path [2] AND thread = $1)
+					ORDER BY path`)
+			}
+		}
+	}
+
+	tx := database.StartTransaction()
+	defer tx.Rollback()
+	fmt.Println(queryStringBuffer.String())
+	rows, err := tx.Query(queryStringBuffer.String(), ID)
+	if err != nil {
+		return nil, errors.NotFoundError
 	}
 	var createdInTime time.Time
 	for rows.Next() {
