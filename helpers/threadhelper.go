@@ -33,7 +33,7 @@ func GetThreadDetailsBySlugOrID(slugOrID *string) (*models.Thread, error) {
 		fieldName = "slug"
 	}
 
-	createdInTime := time.Time{}
+	var createdInTime time.Time
 	var thread models.Thread
 	err := tx.QueryRow(
 		`
@@ -114,10 +114,24 @@ func CreateNewOrGetExistingThread(thread *models.Thread) (*models.Thread, error)
 
 	err = tx.QueryRow(
 		`
-		INSERT
-			INTO threads (slug, forum, author, created, message, title) 
-		VALUES ($1, (SELECT slug FROM forums WHERE slug = $2), $3, $4, $5, $6)
-		RETURNING id, forum
+		INSERT INTO threads (
+			slug, 
+			forum, 
+			author, 
+			created, 
+			message, 
+			title
+			) 
+		VALUES (
+			$1, 
+			(SELECT slug FROM forums WHERE slug = $2), 
+			$3, 
+			$4, 
+			$5, 
+			$6)
+		RETURNING 
+			id, 
+			forum
 		`,
 		thread.Slug,
 		thread.Forum,
@@ -190,7 +204,7 @@ func UpdateThreadDetails(slugOrID *string, threadUpdate *models.ThreadUpdate) (*
 	return &thread, nil
 }
 
-func GetThreadPostsFlat(slugOrID *string, limit, since, desc []byte) (*models.Posts, error) {
+func ThreadSlugOrIDToID(slugOrID *string) (int, error) {
 	var ID int
 	var err error
 	if IsNumber(slugOrID) {
@@ -198,11 +212,18 @@ func GetThreadPostsFlat(slugOrID *string, limit, since, desc []byte) (*models.Po
 	} else {
 		ID, err = GetThreadIDBySlug(slugOrID)
 		if err != nil {
-			return nil, err
+			return -1, err
 		}
 	}
-	var posts models.Posts
-	queryStringBuffer := bytes.Buffer{}
+	return ID, nil
+}
+
+func GetThreadPostsFlat(slugOrID *string, limit, since, desc []byte) (*models.Posts, error) {
+	ID, err := ThreadSlugOrIDToID(slugOrID)
+	if err != nil {
+		return nil, err
+	}
+	var queryStringBuffer bytes.Buffer
 	queryStringBuffer.WriteString(
 		`SELECT 
 			p.author,
@@ -215,54 +236,34 @@ func GetThreadPostsFlat(slugOrID *string, limit, since, desc []byte) (*models.Po
 			p.thread
 		FROM posts p
 		WHERE p.thread = $1`)
-	sinceExists := lsdBuilder(&queryStringBuffer, limit, since, desc, "p.id", "p.id", false)
-	tx := database.StartTransaction()
-	defer tx.Rollback()
+	sinceExists := lsdBuilder(
+		&queryStringBuffer,
+		limit,
+		since,
+		desc,
+		"p.id",
+		"p.id",
+		false)
 
 	var rows *pgx.Rows
+	tx := database.StartTransaction()
+	defer tx.Rollback()
 	if sinceExists {
 		rows, err = tx.Query(queryStringBuffer.String(), ID, string(since))
 	} else {
 		rows, err = tx.Query(queryStringBuffer.String(), ID)
 	}
 	if err != nil {
-		return nil, err // TODO this
+		return nil, err
 	}
-	var createdInTime time.Time
-	for rows.Next() {
-		var currentPost models.Post
-		if err = rows.Scan(
-			&currentPost.Author,
-			&createdInTime,
-			&currentPost.Forum,
-			&currentPost.ID,
-			&currentPost.IsEdited,
-			&currentPost.Message,
-			&currentPost.Parent,
-			&currentPost.Thread,
-		); err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		currentPost.Created = createdInTime.Format(config.Instance.API.TimestampFormat)
-		posts = append(posts, &currentPost)
-	}
-	rows.Close()
-	if len(posts) == 0 {
-		return nil, EmptyPostSearchOrNF(tx, ID)
-	}
-	database.CommitTransaction(tx)
-	return &posts, nil
+	return ScanThreadPosts(rows, tx, ID)
 }
 
 func GetThreadPostsTree(slugOrID *string, limit, since, desc []byte) (*models.Posts, error) {
-	var ID int
-	if IsNumber(slugOrID) {
-		ID, _ = strconv.Atoi(*slugOrID)
-	} else {
-		ID, _ = GetThreadIDBySlug(slugOrID)
+	ID, err := ThreadSlugOrIDToID(slugOrID)
+	if err != nil {
+		return nil, err
 	}
-	var posts models.Posts
 	var queryStringBuffer bytes.Buffer
 	queryStringBuffer.WriteString(
 		`SELECT 
@@ -288,7 +289,6 @@ func GetThreadPostsTree(slugOrID *string, limit, since, desc []byte) (*models.Po
 	tx := database.StartTransaction()
 	defer tx.Rollback()
 	var rows *pgx.Rows
-	var err error
 	if sinceExists {
 		var path []int64
 		_ = tx.QueryRow("SELECT path FROM posts WHERE id = $1::TEXT::INTEGER", since).Scan(&path)
@@ -297,43 +297,16 @@ func GetThreadPostsTree(slugOrID *string, limit, since, desc []byte) (*models.Po
 		rows, err = tx.Query(queryStringBuffer.String(), ID)
 	}
 	if err != nil {
-		return nil, err // TODO this
+		return nil, err
 	}
-	var createdInTime time.Time
-	for rows.Next() {
-		var currentPost models.Post
-		if err = rows.Scan(
-			&currentPost.Author,
-			&createdInTime,
-			&currentPost.Forum,
-			&currentPost.ID,
-			&currentPost.IsEdited,
-			&currentPost.Message,
-			&currentPost.Parent,
-			&currentPost.Thread,
-		); err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		currentPost.Created = createdInTime.Format(config.Instance.API.TimestampFormat)
-		posts = append(posts, &currentPost)
-	}
-	rows.Close()
-	if len(posts) == 0 {
-		return nil, EmptyPostSearchOrNF(tx, ID)
-	}
-	database.CommitTransaction(tx)
-	return &posts, nil
+	return ScanThreadPosts(rows, tx, ID)
 }
 
 func GetThreadPostsParentTree(slugOrID *string, limit, since, desc []byte) (*models.Posts, error) {
-	var ID int
-	if IsNumber(slugOrID) {
-		ID, _ = strconv.Atoi(*slugOrID)
-	} else {
-		ID, _ = GetThreadIDBySlug(slugOrID)
+	ID, err := ThreadSlugOrIDToID(slugOrID)
+	if err != nil {
+		return nil, err
 	}
-	posts := models.Posts{}
 	var queryStringBuffer bytes.Buffer
 	queryStringBuffer.WriteString(
 		`SELECT 
@@ -353,10 +326,6 @@ func GetThreadPostsParentTree(slugOrID *string, limit, since, desc []byte) (*mod
 
 	// here we need a custom lsd constructor,
 	// because it is more complex query than the previous ones
-
-	// limits
-
-	// setting since
 	strLimit := string(limit)
 	if since != nil {
 		strSince := string(since)
@@ -402,10 +371,15 @@ func GetThreadPostsParentTree(slugOrID *string, limit, since, desc []byte) (*mod
 	if err != nil {
 		return nil, errors.NotFoundError
 	}
+	return ScanThreadPosts(rows, tx, ID)
+}
+
+func ScanThreadPosts(rows *pgx.Rows, tx *pgx.Tx, id int) (*models.Posts, error) {
+	var posts models.Posts
 	var createdInTime time.Time
 	for rows.Next() {
 		var currentPost models.Post
-		if err = rows.Scan(
+		if err := rows.Scan(
 			&currentPost.Author,
 			&createdInTime,
 			&currentPost.Forum,
@@ -423,7 +397,7 @@ func GetThreadPostsParentTree(slugOrID *string, limit, since, desc []byte) (*mod
 	}
 	rows.Close()
 	if len(posts) == 0 {
-		return nil, EmptyPostSearchOrNF(tx, ID)
+		return nil, EmptyPostSearchOrNF(tx, id)
 	}
 	database.CommitTransaction(tx)
 	return &posts, nil

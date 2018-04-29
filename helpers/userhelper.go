@@ -56,7 +56,7 @@ func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, error) {
 		return nil, err
 	}
 	for rows.Next() {
-		existingUser := &models.User{}
+		var existingUser models.User
 		if err := rows.Scan(
 			&existingUser.Nickname,
 			&existingUser.Fullname,
@@ -64,7 +64,7 @@ func CreateNewOrGetExistingUsers(user *models.User) (*models.Users, error) {
 			&existingUser.About); err != nil {
 			return nil, err
 		}
-		users = append(users, existingUser)
+		users = append(users, &existingUser)
 	}
 	database.CommitTransaction(tx)
 	return &users, errors.ConflictError

@@ -24,7 +24,7 @@ type Config struct {
 }
 
 // Instance is a singleton of configuration
-var Instance = Config{}
+var Instance Config
 
 func init() {
 	configBytes, err := ioutil.ReadFile("config/config.json")

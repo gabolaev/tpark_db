@@ -16,7 +16,7 @@ type Database struct {
 }
 
 // Instance of database
-var Instance = Database{}
+var Instance Database
 
 func (i *Database) Clear() error {
 	tx := StartTransaction()
