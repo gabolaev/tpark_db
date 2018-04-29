@@ -1,11 +1,10 @@
 package api
 
 import (
-	"fmt"
-
 	"github.com/gabolaev/tpark_db/database"
 	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/helpers"
+	"github.com/gabolaev/tpark_db/logger"
 	"github.com/gabolaev/tpark_db/models"
 	"github.com/valyala/fasthttp"
 )
@@ -40,12 +39,16 @@ func CreateThreadOrForum(context *fasthttp.RequestCtx) {
 		return
 	default:
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
-		context.SetBodyString(err.Error())
+		errStr := err.Error()
+		logger.Instance.Error(errStr)
+		context.SetBodyString(errStr)
 		return
 	}
 	if existingForumJSON, err := result.MarshalJSON(); err != nil {
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
-		context.SetBodyString(err.Error())
+		errStr := err.Error()
+		logger.Instance.Error(errStr)
+		context.SetBodyString(errStr)
 	} else {
 		defer func() {
 			database.Instance.Status.Thread++
@@ -65,7 +68,9 @@ func GetThreadDetails(context *fasthttp.RequestCtx) {
 	case nil:
 		if existingForumJSON, err := thread.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
-			context.SetBodyString(err.Error())
+			errStr := err.Error()
+			logger.Instance.Error(errStr)
+			context.SetBodyString(errStr)
 		} else {
 			context.SetStatusCode(fasthttp.StatusOK)
 			context.SetBody(existingForumJSON)
@@ -97,7 +102,9 @@ func UpdateThreadDetails(context *fasthttp.RequestCtx) {
 	case nil:
 		if existingForumJSON, err := thread.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
-			context.SetBodyString(err.Error())
+			errStr := err.Error()
+			logger.Instance.Error(errStr)
+			context.SetBodyString(errStr)
 		} else {
 			context.SetStatusCode(fasthttp.StatusOK)
 			context.SetBody(existingForumJSON)
@@ -114,7 +121,6 @@ func UpdateThreadDetails(context *fasthttp.RequestCtx) {
 
 func GetThreadPosts(context *fasthttp.RequestCtx) {
 	context.SetContentType("application/json")
-	fmt.Println(context.QueryArgs())
 	slugOrID := context.UserValue("slug_or_id").(string)
 	limit, desc, since :=
 		context.QueryArgs().Peek("limit"),
@@ -134,7 +140,9 @@ func GetThreadPosts(context *fasthttp.RequestCtx) {
 	case nil:
 		if posts, err := result.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
-			context.SetBodyString(err.Error())
+			errStr := err.Error()
+			logger.Instance.Error(errStr)
+			context.SetBodyString(errStr)
 		} else {
 			context.SetStatusCode(fasthttp.StatusOK)
 			context.SetBody(posts)

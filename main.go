@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"os"
 	"os/signal"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/gabolaev/tpark_db/config"
 	"github.com/gabolaev/tpark_db/database"
+	"github.com/gabolaev/tpark_db/logger"
 	"github.com/gabolaev/tpark_db/router"
 	"github.com/valyala/fasthttp"
 )
@@ -23,7 +25,7 @@ func main() {
 
 	go func() {
 		<-syscallChan
-		fmt.Println("Signal emited")
+		logger.Instance.Debug("SIGINT CATCHED")
 		database.Instance.Disconnect()
 		os.Exit(0)
 	}()
@@ -33,5 +35,5 @@ func main() {
 		return
 	}
 
-	fasthttp.ListenAndServe(":5000", router.Instance.Handler)
+	log.Fatal(fasthttp.ListenAndServe(":5000", router.LogHandledRequests(router.Instance.Handler)))
 }

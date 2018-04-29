@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	"github.com/gabolaev/tpark_db/config"
+	"github.com/gabolaev/tpark_db/logger"
 	"github.com/gabolaev/tpark_db/models"
 	"github.com/jackc/pgx"
 )
@@ -40,6 +41,7 @@ func (i *Database) Clear() error {
 
 // Connect method for Instance
 func (i *Database) Connect() error {
+	logger.Instance.Debug("Connecting to database")
 	if connConfig, err := pgx.ParseEnvLibpq(); err != nil {
 		return nil
 	} else {
@@ -51,17 +53,19 @@ func (i *Database) Connect() error {
 			return err
 		}
 	}
+	logger.Instance.Debug("Database connected")
 	return nil
 }
 
 func (i *Database) Disconnect() {
-	fmt.Println("Disconnecting")
+	logger.Instance.Debug("Disconnecting database")
 	i.Pool.Close()
-	fmt.Println("Disconnected")
+	logger.Instance.Debug("Database has been disconnected")
 }
 
 // LoadSchema is
 func (i *Database) LoadSchema(path string) error {
+	logger.Instance.Debug("Loading schema")
 	tx := StartTransaction()
 	defer tx.Rollback()
 
@@ -84,6 +88,7 @@ func (i *Database) LoadSchema(path string) error {
 		return err
 	}
 	CommitTransaction(tx)
+	logger.Instance.Debug("Schema loaded")
 	return nil
 }
 

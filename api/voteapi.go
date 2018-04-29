@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/helpers"
+	"github.com/gabolaev/tpark_db/logger"
 	"github.com/gabolaev/tpark_db/models"
 	"github.com/valyala/fasthttp"
 )
@@ -22,7 +23,9 @@ func VoteThread(context *fasthttp.RequestCtx) {
 		context.SetStatusCode(fasthttp.StatusOK)
 		if updatedThread, err := thread.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
-			context.SetBodyString(err.Error())
+			errStr := err.Error()
+			logger.Instance.Error(errStr)
+			context.SetBodyString(errStr)
 		} else {
 			context.SetStatusCode(fasthttp.StatusOK)
 			context.SetBody(updatedThread)

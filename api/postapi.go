@@ -6,6 +6,7 @@ import (
 	"github.com/gabolaev/tpark_db/database"
 	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/helpers"
+	"github.com/gabolaev/tpark_db/logger"
 	"github.com/gabolaev/tpark_db/models"
 
 	"github.com/valyala/fasthttp"
@@ -69,7 +70,9 @@ func GetPostDetails(context *fasthttp.RequestCtx) {
 	case nil:
 		if posts, err := result.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
-			context.SetBodyString(err.Error())
+			errStr := err.Error()
+			logger.Instance.Error(errStr)
+			context.SetBodyString(errStr)
 		} else {
 			context.SetStatusCode(fasthttp.StatusOK)
 			context.SetBody(posts)
@@ -96,7 +99,9 @@ func UpdatePost(context *fasthttp.RequestCtx) {
 	case nil:
 		if post, err := res.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
-			context.SetBodyString(err.Error())
+			errStr := err.Error()
+			logger.Instance.Error(errStr)
+			context.SetBodyString(errStr)
 		} else {
 			context.SetStatusCode(fasthttp.StatusOK)
 			context.SetBody(post)

@@ -6,6 +6,7 @@ import (
 	"github.com/gabolaev/tpark_db/database"
 	"github.com/gabolaev/tpark_db/errors"
 	"github.com/gabolaev/tpark_db/helpers"
+	"github.com/gabolaev/tpark_db/logger"
 	"github.com/gabolaev/tpark_db/models"
 	"github.com/valyala/fasthttp"
 )
@@ -25,6 +26,9 @@ func CreateUser(context *fasthttp.RequestCtx) {
 	case errors.ConflictError:
 		if responseBody, err := result.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
+			errStr := err.Error()
+			logger.Instance.Error(errStr)
+			context.SetBodyString(errStr)
 		} else {
 			context.SetStatusCode(fasthttp.StatusConflict)
 			context.SetBody(responseBody)
@@ -32,6 +36,9 @@ func CreateUser(context *fasthttp.RequestCtx) {
 	case nil:
 		if responseBody, err := result.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
+			errStr := err.Error()
+			logger.Instance.Error(errStr)
+			context.SetBodyString(errStr)
 		} else {
 			defer func() {
 				database.Instance.Status.User++
@@ -41,7 +48,9 @@ func CreateUser(context *fasthttp.RequestCtx) {
 		}
 	default:
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
-		context.SetBodyString(err.Error())
+		errStr := err.Error()
+		logger.Instance.Error(errStr)
+		context.SetBodyString(errStr)
 	}
 }
 
@@ -53,6 +62,9 @@ func GetUser(context *fasthttp.RequestCtx) {
 	case nil:
 		if user, err := result.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
+			errStr := err.Error()
+			logger.Instance.Error(errStr)
+			context.SetBodyString(errStr)
 		} else {
 			context.SetStatusCode(fasthttp.StatusOK)
 			context.SetBody(user)
@@ -85,6 +97,9 @@ func UpdateUser(context *fasthttp.RequestCtx) {
 	case nil:
 		if updatedUser, err := user.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
+			errStr := err.Error()
+			logger.Instance.Error(errStr)
+			context.SetBodyString(errStr)
 		} else {
 			context.SetStatusCode(fasthttp.StatusOK)
 			context.SetBody(updatedUser)
@@ -98,7 +113,9 @@ func UpdateUser(context *fasthttp.RequestCtx) {
 		responseStatus = fasthttp.StatusConflict
 	default:
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
-		context.SetBodyString(err.Error())
+		errStr := err.Error()
+		logger.Instance.Error(errStr)
+		context.SetBodyString(errStr)
 		return
 	}
 	context.SetStatusCode(responseStatus)

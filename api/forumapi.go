@@ -3,6 +3,8 @@ package api
 import (
 	"fmt"
 
+	"github.com/gabolaev/tpark_db/logger"
+
 	"github.com/gabolaev/tpark_db/database"
 
 	"github.com/gabolaev/tpark_db/errors"
@@ -38,12 +40,17 @@ func CreateForum(context *fasthttp.RequestCtx) {
 		return
 	default:
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
-		context.SetBodyString(err.Error())
+		errStr := err.Error()
+		logger.Instance.Error(errStr)
+		context.SetBodyString(errStr)
 		return
 	}
 
 	if responseJSON, err := result.MarshalJSON(); err != nil {
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
+		errStr := err.Error()
+		logger.Instance.Error(errStr)
+		context.SetBodyString(errStr)
 	} else {
 		defer func() {
 			database.Instance.Status.Forum++
@@ -63,6 +70,9 @@ func GetForumDetails(context *fasthttp.RequestCtx) {
 	case nil:
 		if user, err := result.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
+			errStr := err.Error()
+			logger.Instance.Error(errStr)
+			context.SetBodyString(errStr)
 		} else {
 			context.SetStatusCode(fasthttp.StatusOK)
 			context.SetBody(user)
@@ -85,7 +95,9 @@ func GetForumThreads(context *fasthttp.RequestCtx) {
 	case nil:
 		if thread, err := result.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
-			context.SetBodyString(err.Error())
+			errStr := err.Error()
+			logger.Instance.Error(errStr)
+			context.SetBodyString(errStr)
 		} else {
 			context.SetStatusCode(fasthttp.StatusOK)
 			context.SetBody(thread)
@@ -101,7 +113,9 @@ func GetForumThreads(context *fasthttp.RequestCtx) {
 		context.SetBody([]byte{91, 93})
 	default:
 		context.SetStatusCode(fasthttp.StatusInternalServerError)
-		context.SetBodyString(err.Error())
+		errStr := err.Error()
+		logger.Instance.Error(errStr)
+		context.SetBodyString(errStr)
 	}
 }
 
@@ -114,7 +128,9 @@ func GetForumUsers(context *fasthttp.RequestCtx) {
 	case nil:
 		if users, err := result.MarshalJSON(); err != nil {
 			context.SetStatusCode(fasthttp.StatusInternalServerError)
-			context.SetBodyString(err.Error())
+			errStr := err.Error()
+			logger.Instance.Error(errStr)
+			context.SetBodyString(errStr)
 		} else {
 			context.SetStatusCode(fasthttp.StatusOK)
 			context.SetBody(users)
