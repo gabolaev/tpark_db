@@ -33,5 +33,5 @@ func main() {
 		return
 	}
 
-	fasthttp.ListenAndServe(":8080", router.Instance.Handler)
+	fasthttp.ListenAndServe(":5000", router.Instance.Handler)
 }

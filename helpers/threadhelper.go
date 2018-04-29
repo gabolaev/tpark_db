@@ -216,12 +216,10 @@ func GetThreadPostsFlat(slugOrID *string, limit, since, desc []byte) (*models.Po
 		FROM posts p
 		WHERE p.thread = $1`)
 	sinceExists := lsdBuilder(&queryStringBuffer, limit, since, desc, "p.id", "p.id", false)
-	fmt.Println(queryStringBuffer.String())
 	tx := database.StartTransaction()
 	defer tx.Rollback()
 
 	var rows *pgx.Rows
-	fmt.Println(queryStringBuffer.String())
 	if sinceExists {
 		rows, err = tx.Query(queryStringBuffer.String(), ID, string(since))
 	} else {
@@ -291,7 +289,6 @@ func GetThreadPostsTree(slugOrID *string, limit, since, desc []byte) (*models.Po
 	defer tx.Rollback()
 	var rows *pgx.Rows
 	var err error
-	fmt.Println(queryStringBuffer.String())
 	if sinceExists {
 		var path []int64
 		_ = tx.QueryRow("SELECT path FROM posts WHERE id = $1::TEXT::INTEGER", since).Scan(&path)
@@ -401,7 +398,6 @@ func GetThreadPostsParentTree(slugOrID *string, limit, since, desc []byte) (*mod
 
 	tx := database.StartTransaction()
 	defer tx.Rollback()
-	fmt.Println(queryStringBuffer.String())
 	rows, err := tx.Query(queryStringBuffer.String(), ID)
 	if err != nil {
 		return nil, errors.NotFoundError

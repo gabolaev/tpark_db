@@ -7,7 +7,7 @@ ENV REPO=github.com/gabolaev/tpark_db
 
 # Basic tools
 RUN apt update
-RUN apt install -y git vim wget
+RUN apt install -y git vim wget curl
 
 # PostgreSQL
 RUN apt install -y postgresql-$PGVERSION postgresql-contrib
@@ -47,7 +47,8 @@ ADD ./ $GOPATH/src/$REPO
 WORKDIR $GOPATH/src/$REPO
 RUN go build
 EXPOSE 5000
+RUN chmod +x tech-db-forum
 
 RUN echo "./config/postgresql.conf" >> /etc/postgresql/$PGVERSION/main/postgresql.conf
 USER postgres
-CMD /etc/init.d/postgresql start && ./tpark_db
+CMD service postgresql start && go run main.go
