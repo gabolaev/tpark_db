@@ -1,5 +1,7 @@
 # tpark_db
 
+[![Build Status](https://travis-ci.org/gabolaev/tpark_db.svg?branch=master)](https://travis-ci.org/gabolaev/tpark_db)
+
 Реализация проекта "Форумы" на курсе по базам данных в Технопарке Mail.ru (https://park.mail.ru).
 
 Суть задания заключается в реализации API к базе данных проекта «Форумы» по документации к этому API.
