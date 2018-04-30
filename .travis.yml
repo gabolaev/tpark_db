@@ -7,5 +7,5 @@ services:
 
 script:
   - docker build -t g.gabolaev .
-  - docker run -p 5000:5000 --name g.gabolaev -t g.gabolaev
+  - docker run -dp 5000:5000 --name g.gabolaev -t g.gabolaev
   - docker ps -a
