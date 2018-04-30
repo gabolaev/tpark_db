@@ -47,7 +47,6 @@ ADD ./ $GOPATH/src/$REPO
 WORKDIR $GOPATH/src/$REPO
 RUN go build
 EXPOSE 5000
-RUN chmod +x tech-db-forum
 
 RUN echo "./config/postgresql.conf" >> /etc/postgresql/$PGVERSION/main/postgresql.conf
 USER postgres

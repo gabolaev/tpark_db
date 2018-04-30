@@ -5,7 +5,14 @@ language: go
 services:
   - docker
 
-script:
+install:
   - docker build -t g.gabolaev .
   - docker run -dp 5000:5000 --name g.gabolaev -t g.gabolaev
-  - docker ps -a
+  - go get -u -v github.com/bozaro/tech-db-forum
+  - go build github.com/bozaro/tech-db-forum
+
+script:
+  - ./tech-db-forum func -u http://localhost:5000/api -r report.html
+
+after_script:
+  - docker kill g.gabolaev
