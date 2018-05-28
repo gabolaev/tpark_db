@@ -1,13 +1,4 @@
-# tpark_db
-
-### Тестирование: 
-
-| Тип           | Результат     |
-|:-------------:|:-------------:|
-| Функциональное|[![Build Status](https://travis-ci.org/gabolaev/tpark_db.svg?branch=master)](https://travis-ci.org/gabolaev/tpark_db)|
-| Нагрузочное   | ? / 1200 rps   |
-
----
+# Функциональное тестирование: [![Build Status](https://travis-ci.org/gabolaev/tpark_db.svg?branch=master)](https://travis-ci.org/gabolaev/tpark_db)
 
 Реализация проекта "Форумы" на курсе по базам данных в Технопарке Mail.ru (https://park.mail.ru).
 
